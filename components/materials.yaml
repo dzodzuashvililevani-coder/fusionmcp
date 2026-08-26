@@ -1,0 +1,10 @@
+# Density in g/cm^3. Used to estimate frame mass from cut area x thickness.
+densities:
+  balsa:           0.16
+  basswood:        0.42
+  poplar_plywood:  0.50
+  birch_plywood:   0.68
+  bamboo_ply:      0.70
+  mdf:             0.75
+  oak:             0.75
+  carbon_fiber:    1.55   # for comparison

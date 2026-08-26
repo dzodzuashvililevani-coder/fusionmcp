@@ -1,0 +1,16 @@
+# Mass budget. Motors + frame are added AUTOMATICALLY from params.yaml -
+# only list everything else here.
+#
+# pos_mm is [x, y, z] from the frame center, in millimetres:
+#   +x = right   +y = forward (nose)   +z = up
+# Guess z roughly; x and y are what actually matter for balance.
+
+items:
+  - { name: flight_controller, mass_g: 6.0,  pos_mm: [0,   0,   12] }   # TODO
+  - { name: esc_4in1,          mass_g: 7.0,  pos_mm: [0,   0,   6]  }   # TODO or omit if ESCs are on the FC
+  - { name: camera,            mass_g: 5.0,  pos_mm: [0,   28,  14] }   # TODO
+  - { name: vtx,               mass_g: 4.0,  pos_mm: [0,  -25,  14] }   # TODO
+  - { name: antenna,           mass_g: 3.0,  pos_mm: [0,  -40,  20] }   # TODO
+  - { name: receiver,          mass_g: 1.5,  pos_mm: [0,  -15,  16] }   # TODO
+  - { name: hardware_screws,   mass_g: 8.0,  pos_mm: [0,   0,   0]  }   # standoffs, nuts, zipties
+  - { name: battery_strap,     mass_g: 2.0,  pos_mm: [0,   0,   22] }

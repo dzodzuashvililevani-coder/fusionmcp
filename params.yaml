@@ -1,0 +1,67 @@
+# ============================================================
+#  SINGLE SOURCE OF TRUTH for the frame.
+#  Every tool + the Fusion model reads from this file.
+#  Change a number here -> re-run `frame report` -> rebuild in Fusion.
+#  Values marked TODO are guesses. Measure yours and replace them.
+# ============================================================
+
+stock:
+  # The raw wood you are cutting from
+  size_mm: [250, 250]
+  thickness_mm: 3.0          # TODO measure with caliper
+  material: birch_plywood    # see materials.yaml for density table
+  kerf_mm: 0.2               # laser ~0.15-0.25, CNC = endmill dia, jigsaw ~1.5
+  cut_method: laser          # laser | cnc | hand
+
+props:
+  diameter_mm: 76.0          # TODO. 3" = 76.2mm, 2.5" = 63.5, 2" = 51
+  tip_clearance_mm: 10.0     # gap between adjacent prop tips
+
+motors:
+  count: 4
+  layout: x                  # x | h  (x = all four arms equal)
+  bolt_circle_mm: 9.0        # TODO measure hole-to-hole across the motor base
+  screw: M2
+  base_diameter_mm: 12.0     # TODO
+  mass_g: 6.5                # TODO weigh one motor
+  max_thrust_g: 120          # TODO per motor at your battery voltage, 100% throttle
+
+arm:
+  # Distance center -> motor shaft. null = solver picks the largest that fits the stock.
+  motor_radius_mm: null
+  orientation: diagonal      # diagonal = arms point at stock corners (LONGER arms)
+                             # axis     = arms point at stock edge midpoints
+  width_mm: 20.0             # arm width at the motor end
+  root_width_mm: 30.0        # arm width where it meets the center plate (taper = stiffer)
+
+center_plate:
+  size_mm: [70, 70]          # TODO must fit your FC stack + battery strap slots
+  fc_hole_pattern_mm: 25.5   # TODO 16, 20, 25.5, or 30.5 - measure your flight board
+  fc_screw: M3
+
+battery:
+  size_mm: [65, 32, 18]      # TODO L x W x H
+  mass_g: 55.0               # TODO weigh it
+  mount: top_strap           # top_strap | bottom_strap
+
+camera:
+  width_mm: 19.0             # TODO
+  mount_ear_spacing_mm: 19.0 # TODO
+  tilt_deg: 20
+
+holes:
+  # Screw holes are cut CLEARANCE larger than the nominal screw diameter so the
+  # screw drops through without splitting the wood. Motor screws that thread
+  # into the motor itself want clearance; ones that take a nut want more.
+  screw_clearance_mm: 0.3
+  # Slots for battery straps and zipties, [length, width].
+  ziptie_slot_mm: [8.0, 2.5]
+  # Round lightening holes in the arms. 0 disables them.
+  lightening_hole_dia_mm: 0.0
+
+limits:
+  # Design rules the validator enforces before you cut anything
+  min_twr: 2.0               # below this it will not fly properly
+  target_twr: 3.0
+  max_cg_offset_mm: 5.0      # CG must sit near the thrust center
+  min_screw_edge_distance_mm: 4.0   # wood splits if holes are too close to an edge

@@ -1,0 +1,33 @@
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
+.pytest-run-tmp/
+*.egg-info/
+.claude/
+.codex/
+.agents/
+
+# Local secrets / credentials
+.env
+.env.*
+*.pem
+*.key
+*.p12
+*.pfx
+*.crt
+*.cer
+*_secret*
+*_token*
+*credentials*
+
+# Fusion working files (keep exports, not autosaves)
+cad/*.f3d.bak
+*.f3d.lock
+
+# Machine-specific editor / tool overrides. The committed files stay generic.
+.vscode/settings.local.json
+
+# OS
+Thumbs.db
+desktop.ini
