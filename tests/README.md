@@ -14,6 +14,8 @@ matter what numbers end up in `params.yaml`.
 | `scripttest____` | [test_fusion_scripts.py](test_fusion_scripts.py) | Python | Runs `fusion_scripts/` against a fake Fusion |
 | `stub____` | [fusion_stub.py](fusion_stub.py) | Python | The fake `adsk` package. Not a test -- a fixture |
 | `doctest____` | [test_structure.py](test_structure.py) | Python | Every folder has a README with a portal table |
+| `privacytest____` | [test_privacy.py](test_privacy.py) | Python | No committed secrets, emails, or local machine paths |
+| `protocoltest____` | [test_protocol.py](test_protocol.py) | Python | Plan-Gate-Verify folders and templates keep their contracts |
 
 ## Run
 

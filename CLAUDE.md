@@ -29,6 +29,8 @@ with a finer-grained table.
 | `cli____` | [src/frame_tools/cli.py](src/frame_tools/cli.py) | Python | `frame` command entry point |
 | `measure____` | [docs/measurements.md](docs/measurements.md) | Markdown | Caliper checklist to fill in |
 | `buildlog____` | [docs/build-log.md](docs/build-log.md) | Markdown | What actually happened |
+| `planner____` | [docs/planner/](docs/planner/README.md) | Markdown | Planner role contract for Plan-Gate-Verify |
+| `inbox____` | [docs/implementer/](docs/implementer/README.md) | Markdown | Implementer inbox: plans, gates, error fixes |
 | `fusion____` | [fusion_scripts/](fusion_scripts/README.md) | Python (in Fusion) | Scripts that run inside Fusion |
 | `handoff____` | [fusion_scripts/frame_params.json](fusion_scripts/frame_params.json) | JSON | The generated handoff. `frame fusion -o` writes it |
 | `mcp____` | [.mcp.json](.mcp.json) | JSON | Fusion MCP endpoint, picked up by Claude Code |
@@ -99,3 +101,6 @@ uv pip install -e ".[dev,dxf]"
   consume `frame fusion` output; nothing downstream recomputes a dimension.
 - Inside Fusion, **every API length is centimetres** regardless of document
   units. Convert at the boundary with `_common.mm()` / `to_mm()`.
+- For multi-agent work, use [docs/planner/](docs/planner/README.md) and
+  [docs/implementer/](docs/implementer/README.md): plans and sign-offs are
+  files, gates are hard halts, and the planner is not the implementer.
