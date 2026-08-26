@@ -11,8 +11,10 @@
 |---|---|---|---|---|
 | `measure____` | [measurements.md](measurements.md) | Markdown | Caliper checklist for every salvaged part | **Fill this in first** |
 | `buildlog____` | [build-log.md](build-log.md) | Markdown | Dated log of what changed and what happened | Append as you go |
-| `planner____` | [planner/](planner/README.md) | Markdown | Planner role contract and verification rules | Read before planning |
-| `inbox____` | [implementer/](implementer/README.md) | Markdown | Implementer inbox, plan templates, gate reports | Use for multi-agent work |
+| `brainstorm____` | [brainstorming/](brainstorming/README.md) | Markdown | Rough feature ideas before a plan exists | Start feature thinking here |
+| `protocol____` | [protocol/](protocol/README.md) | Markdown | Shared Plan-Gate-Verify rules, contracts, trust boundaries | Read before multi-agent work |
+| `claude____` | [claude/](claude/README.md) | Markdown | Claude planner/verifier role docs | Read before planning |
+| `codex____` | [codex/](codex/README.md) | Markdown | Codex inbox, plan templates, gate reports | Use for implementation |
 
 ## The flow
 
@@ -35,6 +37,7 @@ the reason the second frame is better than the first lives in that file.
 ## Multi-agent work
 
 This repo uses the Plan-Gate-Verify protocol for changes that span more than a
-small fix. The planner writes a self-contained plan into
-[`implementer/`](implementer/README.md), the implementer edits only the named
-scope, and every gate stops until a verifier signs off in the plan file.
+small fix. Brainstorm rough ideas in [`brainstorming/`](brainstorming/README.md),
+use [`protocol/`](protocol/README.md) as the shared method, Claude writes a
+self-contained plan into [`codex/`](codex/README.md), Codex edits only the named
+scope, and every gate stops until Claude signs off in the plan file.

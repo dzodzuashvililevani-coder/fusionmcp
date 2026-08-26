@@ -105,6 +105,10 @@ saying what it holds and in what format:
 | [tests/](tests/README.md) | Design invariants | Python |
 | [fusion_scripts/](fusion_scripts/README.md) | Scripts that run *inside* Fusion | Python (in Fusion) |
 | [docs/](docs/README.md) | Measurements in, lessons out | Markdown |
+| [docs/brainstorming/](docs/brainstorming/README.md) | Feature ideas before planning | Markdown |
+| [docs/protocol/](docs/protocol/README.md) | Plan-Gate-Verify method | Markdown |
+| [docs/claude/](docs/claude/README.md) | Claude planner/verifier docs | Markdown |
+| [docs/codex/](docs/codex/README.md) | Codex plans, gates, error fixes | Markdown |
 | [cad/](cad/README.md) | Fusion exports | Binary CAD |
 | [dxf/](dxf/README.md) | 2D cut files | Vector |
 | [photos/](photos/README.md) | Part photos + sourced web references | Raster |

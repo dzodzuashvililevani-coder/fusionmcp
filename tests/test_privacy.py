@@ -49,6 +49,8 @@ def tracked_files() -> list[Path]:
 def read_if_text(path: Path) -> str | None:
     if path.resolve() == THIS_FILE:
         return None
+    if not path.exists():
+        return None
     if path.suffix.lower() not in TEXT_EXTENSIONS and path.name not in TEXT_EXTENSIONS:
         return None
     try:

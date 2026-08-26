@@ -2,13 +2,12 @@
 
 **Plan:** claudePlan-<slug>-N.md
 **Created:** YYYY-MM-DD
-**Source spec:** <path to the user's .md>
+**Source spec:** <path in docs/brainstorming/ or direct user request>
 **Status:** in-progress | blocked | complete
 
 ## 1. Goal (<= 3 sentences)
 
-What we are building, in one breath. No background beyond what the implementer
-needs.
+What we are building, in one breath. No background beyond what Codex needs.
 
 ## 2. Out of scope
 
@@ -41,7 +40,7 @@ Each criterion must be observable and testable from outside the code.
 
 ### Phase <K+2>: verify - <one-line title>
 
-**Definition of done:** planner appends PASS sign-off or writes error-fix
+**Definition of done:** Claude appends PASS sign-off or writes error-fix
 **Touches:** plan file, or error-fix file if verification fails
 
 ## 6. Test commands (canonical)
