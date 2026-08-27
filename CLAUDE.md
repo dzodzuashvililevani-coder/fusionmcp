@@ -17,6 +17,7 @@ with a finer-grained table.
 | Portal | Path | Type | Holds |
 |---|---|---|---|
 | `params____` | [params.yaml](params.yaml) | YAML | **Start here.** All design numbers |
+| `fields____` | [fields.yaml](fields.yaml) | YAML | Measurement field spec used by CLI/UI writers |
 | `loadout____` | [components/loadout.yaml](components/loadout.yaml) | YAML | Component masses + positions for CG |
 | `materials____` | [components/materials.yaml](components/materials.yaml) | YAML | Wood density table |
 | `loader____` | [src/frame_tools/params.py](src/frame_tools/params.py) | Python | Find the project root, load YAML, screw + hole sizes |
@@ -27,6 +28,7 @@ with a finer-grained table.
 | `fusionout____` | [src/frame_tools/fusion.py](src/frame_tools/fusion.py) | Python | Builds the Fusion payload + User Parameter table |
 | `dxfout____` | [src/frame_tools/dxf_out.py](src/frame_tools/dxf_out.py) | Python | Kerf calibration coupon (the only non-Fusion DXF) |
 | `cli____` | [src/frame_tools/cli.py](src/frame_tools/cli.py) | Python | `frame` command entry point |
+| `fcc____` | [src/fcc/](src/fcc/README.md) | Python | Domain-blind field spec and writer support |
 | `project____` | [docs/project/](docs/project/README.md) | Markdown | Project identity, mission, scope, source-of-truth hierarchy |
 | `brainstorm____` | [docs/brainstorming/](docs/brainstorming/README.md) | Markdown | Rough feature ideas before a plan exists |
 | `knowledge____` | [docs/knowledge/](docs/knowledge/README.md) | Markdown | Export contract: what finished work hands off to a separate knowledge project |

@@ -105,7 +105,9 @@ saying what it holds and in what format:
 | Folder | Holds | Data type |
 |---|---|---|
 | [components/](components/README.md) | Part masses, positions, wood densities | YAML |
+| [fields.yaml](fields.yaml) | Measurement field spec for writer/UI inputs | YAML |
 | [src/frame_tools/](src/frame_tools/README.md) | The calculation engine | Python |
+| [src/fcc/](src/fcc/README.md) | Domain-blind field spec and writer support | Python |
 | [tests/](tests/README.md) | Design invariants | Python |
 | [fusion_scripts/](fusion_scripts/README.md) | Scripts that run *inside* Fusion | Python (in Fusion) |
 | [docs/](docs/README.md) | Measurements in, lessons out | Markdown |

@@ -3,7 +3,7 @@
 **Plan:** claudePlan-data-spine-1.md
 **Created:** 2026-08-28
 **Source spec:** `docs/project/roadmap.md` Phase 1
-**Status:** in-progress
+**Status:** phase-2-gate-complete-awaiting-verify
 
 > **This is the Phase 0 -> Phase 1 move.** It is the first implementation work of
 > the project proper. Read `docs/project/roadmap.md` section 0 before starting:
@@ -360,4 +360,52 @@ Baseline before this plan starts: **116 passed, 0 errors** and
 
 ## 7. Sign-off log
 
-_No gate reports yet. Codex appends here._
+### Phase 2 gate report - 2026-08-28
+
+## Commit SHA
+
+Base before Phase 1 implementation: `6c3e82e`.
+
+## Files changed
+
+```text
+M  CLAUDE.md
+M  README.md
+M  pyproject.toml
+A  fields.yaml
+A  src/fcc/README.md
+A  src/fcc/__init__.py
+A  src/fcc/errors.py
+A  src/fcc/fields.py
+A  tests/test_fields.py
+M  docs/codex/claudePlan-data-spine-1.md
+```
+
+## Test command output
+
+```powershell
+.\.venv\Scripts\python.exe -m pytest tests\test_fields.py -q -p no:cacheprovider --basetemp=.pytest-work-tmp
+9 passed in 1.50s
+
+.\.venv\Scripts\python.exe -m pytest -q -p no:cacheprovider --basetemp=.pytest-work-tmp
+128 passed in 3.56s
+
+.\.venv\Scripts\python.exe -m frame_tools.cli report
+10 passed, 0 warnings, 0 failures
+```
+
+## Self-assessment
+
+Phase 1 is implemented as scoped: spec, loader, named errors, package wiring,
+README, indexes, and field-spec tests. The loader validates ids, files, ranges,
+key paths, list indexes, loadout items, and measurement labels. No runtime
+dependencies were added.
+
+## Open questions
+
+- The plan expected 18 TODO markers expanding to 21 field rows. The
+  implementation found and encoded 21 measurable field rows, matching the
+  plan's final total.
+- `measurement_label` is ambiguous for repeated labels like `Mass`; Phase 4's
+  checklist writer will need section-aware matching or label disambiguation
+  before it can tick those lines safely.

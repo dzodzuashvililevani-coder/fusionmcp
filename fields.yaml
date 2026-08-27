@@ -1,0 +1,275 @@
+version: 1
+fields:
+  - id: stock_thickness
+    question: Measure actual wood stock thickness with calipers.
+    unit: mm
+    file: params.yaml
+    key_path: stock.thickness_mm
+    index: null
+    item: null
+    field: null
+    measurement_label: Actual thickness (measure, do not trust the label)
+    min: 1.0
+    max: 8.0
+    type: float
+    shape_hint: stock_thickness
+  - id: prop_diameter
+    question: Measure propeller diameter from tip to opposite tip.
+    unit: mm
+    file: params.yaml
+    key_path: props.diameter_mm
+    index: null
+    item: null
+    field: null
+    measurement_label: Diameter
+    min: 35.0
+    max: 130.0
+    type: float
+    shape_hint: prop_diameter
+  - id: motor_bolt_circle
+    question: Measure motor bolt circle hole to hole, across the base.
+    unit: mm
+    file: params.yaml
+    key_path: motors.bolt_circle_mm
+    index: null
+    item: null
+    field: null
+    measurement_label: Bolt circle (hole to hole, across the base)
+    min: 4.0
+    max: 25.0
+    type: float
+    shape_hint: motor_bolt_circle
+  - id: motor_base_diameter
+    question: Measure the motor base outside diameter.
+    unit: mm
+    file: params.yaml
+    key_path: motors.base_diameter_mm
+    index: null
+    item: null
+    field: null
+    measurement_label: Base diameter
+    min: 6.0
+    max: 40.0
+    type: float
+    shape_hint: motor_base
+  - id: motor_mass
+    question: Weigh one motor without propeller or screws.
+    unit: g
+    file: params.yaml
+    key_path: motors.mass_g
+    index: null
+    item: null
+    field: null
+    measurement_label: Mass (one motor)
+    min: 1.0
+    max: 80.0
+    type: float
+    shape_hint: motor_mass
+  - id: motor_max_thrust
+    question: Measure maximum thrust per motor at the battery voltage.
+    unit: g
+    file: params.yaml
+    key_path: motors.max_thrust_g
+    index: null
+    item: null
+    field: null
+    measurement_label: Max thrust per motor
+    min: 10.0
+    max: 1000.0
+    type: float
+    shape_hint: motor_thrust
+  - id: center_plate_width
+    question: Measure or choose the center plate width that fits the stack and strap slots.
+    unit: mm
+    file: params.yaml
+    key_path: center_plate.size_mm
+    index: 0
+    item: null
+    field: null
+    measurement_label: null
+    min: 30.0
+    max: 160.0
+    type: float
+    shape_hint: center_plate_width
+  - id: center_plate_length
+    question: Measure or choose the center plate length that fits the stack and strap slots.
+    unit: mm
+    file: params.yaml
+    key_path: center_plate.size_mm
+    index: 1
+    item: null
+    field: null
+    measurement_label: null
+    min: 30.0
+    max: 160.0
+    type: float
+    shape_hint: center_plate_length
+  - id: fc_hole_pattern
+    question: Measure the square flight controller mounting hole pattern, hole to hole.
+    unit: mm
+    file: params.yaml
+    key_path: center_plate.fc_hole_pattern_mm
+    index: null
+    item: null
+    field: null
+    measurement_label: Mounting hole pattern (square, hole to hole)
+    min: 10.0
+    max: 45.0
+    type: float
+    shape_hint: fc_hole_pattern
+  - id: battery_length
+    question: Measure battery length.
+    unit: mm
+    file: params.yaml
+    key_path: battery.size_mm
+    index: 0
+    item: null
+    field: null
+    measurement_label: null
+    min: 20.0
+    max: 180.0
+    type: float
+    shape_hint: battery_length
+  - id: battery_width
+    question: Measure battery width.
+    unit: mm
+    file: params.yaml
+    key_path: battery.size_mm
+    index: 1
+    item: null
+    field: null
+    measurement_label: null
+    min: 10.0
+    max: 80.0
+    type: float
+    shape_hint: battery_width
+  - id: battery_height
+    question: Measure battery height.
+    unit: mm
+    file: params.yaml
+    key_path: battery.size_mm
+    index: 2
+    item: null
+    field: null
+    measurement_label: null
+    min: 5.0
+    max: 60.0
+    type: float
+    shape_hint: battery_height
+  - id: battery_mass
+    question: Weigh the battery.
+    unit: g
+    file: params.yaml
+    key_path: battery.mass_g
+    index: null
+    item: null
+    field: null
+    measurement_label: Mass
+    min: 5.0
+    max: 500.0
+    type: float
+    shape_hint: battery_mass
+  - id: camera_width
+    question: Measure the camera body width.
+    unit: mm
+    file: params.yaml
+    key_path: camera.width_mm
+    index: null
+    item: null
+    field: null
+    measurement_label: Body width
+    min: 5.0
+    max: 60.0
+    type: float
+    shape_hint: camera_width
+  - id: camera_mount_ear_spacing
+    question: Measure camera mount ear spacing.
+    unit: mm
+    file: params.yaml
+    key_path: camera.mount_ear_spacing_mm
+    index: null
+    item: null
+    field: null
+    measurement_label: Mount ear spacing
+    min: 5.0
+    max: 60.0
+    type: float
+    shape_hint: camera_mount_ears
+  - id: flight_controller_mass
+    question: Weigh the flight controller.
+    unit: g
+    file: components/loadout.yaml
+    key_path: items.flight_controller.mass_g
+    index: null
+    item: flight_controller
+    field: mass_g
+    measurement_label: Mass
+    min: 1.0
+    max: 80.0
+    type: float
+    shape_hint: board_mass
+  - id: esc_4in1_mass
+    question: Weigh the 4-in-1 ESC, or omit it later if ESCs are integrated.
+    unit: g
+    file: components/loadout.yaml
+    key_path: items.esc_4in1.mass_g
+    index: null
+    item: esc_4in1
+    field: mass_g
+    measurement_label: Mass each
+    min: 0.0
+    max: 100.0
+    type: float
+    shape_hint: board_mass
+  - id: camera_mass
+    question: Weigh the camera.
+    unit: g
+    file: components/loadout.yaml
+    key_path: items.camera.mass_g
+    index: null
+    item: camera
+    field: mass_g
+    measurement_label: Mass
+    min: 0.5
+    max: 80.0
+    type: float
+    shape_hint: camera_mass
+  - id: vtx_mass
+    question: Weigh the video transmitter.
+    unit: g
+    file: components/loadout.yaml
+    key_path: items.vtx.mass_g
+    index: null
+    item: vtx
+    field: mass_g
+    measurement_label: VTX size and mass
+    min: 0.5
+    max: 80.0
+    type: float
+    shape_hint: board_mass
+  - id: antenna_mass
+    question: Weigh the antenna.
+    unit: g
+    file: components/loadout.yaml
+    key_path: items.antenna.mass_g
+    index: null
+    item: antenna
+    field: mass_g
+    measurement_label: Antenna mass and length
+    min: 0.1
+    max: 40.0
+    type: float
+    shape_hint: antenna_mass
+  - id: receiver_mass
+    question: Weigh the receiver.
+    unit: g
+    file: components/loadout.yaml
+    key_path: items.receiver.mass_g
+    index: null
+    item: receiver
+    field: mass_g
+    measurement_label: Receiver mass
+    min: 0.1
+    max: 40.0
+    type: float
+    shape_hint: receiver_mass
