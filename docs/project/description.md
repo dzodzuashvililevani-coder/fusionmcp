@@ -17,15 +17,23 @@ lessons.
 
 ## 2. Why This Exists
 
-This project exists to make Fusion 360 hardware development easier, more
-repeatable, and easier to learn from.
+This project exists to make Fusion 360 hardware development easier and more
+repeatable.
 
 Fusion 360 is the modeling environment, but the work around it is larger than
 modeling. The project must help with measurement capture, parameter management,
-part planning, Fusion script handoff, build logging, design review, and later
-knowledge reuse. The long-term value is not only the drone frame. The value is
-the system that remembers what was measured, what was tried, what failed, what
-worked, and what can be reused in a future hardware project.
+part planning, Fusion script handoff, build logging, and design review.
+
+**FusionControlCenter is a creation tool. It is not a knowledge system.**
+Knowledge capture -- extraction, promotion, deduplication, cross-project memory
+-- belongs to a separate project that does not exist yet. See section 6, and
+`docs/brainstorming/decision-scope-split.md` for why.
+
+What this project owes that future one is narrow: **finished products land in
+named folders, in a documented shape, with their provenance written alongside
+them.** Recording where a number came from is cheap at the moment it is produced
+and impossible to reconstruct later. Deciding what to do with that record is
+someone else's job.
 
 ## 3. Source Of Truth
 
@@ -42,15 +50,18 @@ project adopts -- see `docs/brainstorming/review-icm-paper.md`.
 | Design truth | `params.yaml` and `components/loadout.yaml` | Machine-readable dimensions, masses, and positions | L4 |
 | Execution truth | `fusion_scripts/`, `frame` commands, and generated handoff JSON | Repeatable actions used by Fusion 360 | L2/L3 |
 | Result truth | `docs/build-log.md`, photos, CAD exports, DXF exports | What actually happened during build and test | L4 |
-| Candidate knowledge | `docs/knowledge/capture-candidates.md` | Facts that may become reusable knowledge later | L4 awaiting L3 |
-| Reference knowledge | (future) component cards, verified lessons | Stable facts every later build reads as constraints | L3 |
+| Candidate knowledge | `docs/knowledge/capture-candidates.md` | The handoff contract: what gets exported, in what shape, with what labels | L4, marked for export |
 | Raw thinking | `docs/brainstorming/` | Ideas, reviews, and decisions before they become durable contracts | -- |
 
-The distinction that matters most is **Layer 3 against Layer 4**. Layer 4 is
-this build: it changes every run and is processed as input. Layer 3 is what
-survives the build: it is stable across runs and is absorbed as a constraint.
-Everything this project calls knowledge capture is the movement of an artifact
-from Layer 4 to Layer 3, and section 8 defines when that movement is allowed.
+**This project produces Layer 4 and stops there.** Layer 4 is this build: it
+changes every run and is processed as input. Layer 3 -- stable reference absorbed
+as constraints by later projects -- is produced by the separate knowledge project
+from what this one exports. The Layer 4 to Layer 3 movement is real and still
+matters; it just happens downstream, on the other side of the handoff described
+in section 6.
+
+What this repository does at that boundary is mark a thing finished and record
+its provenance. It does not decide what the thing is worth.
 
 Raw brainstorming is not implementation truth. A major idea becomes active only
 after it is promoted into this project description, a protocol document, a
@@ -97,35 +108,48 @@ In scope now:
 - Preserve raw measurements and build results in Markdown.
 - Keep Fusion work repeatable through scripts and generated handoff data.
 - Use Plan-Gate-Verify for multi-agent work.
-- Capture reusable lessons as candidates before promoting them into permanent
-  knowledge.
-- Prepare folder and file contracts that a future standalone knowledge-capture
-  project can read.
+- Deposit finished products into the named folders of section 8, with their
+  provenance recorded alongside them.
+
+Out of scope, permanently:
+
+- A knowledge extractor, of any kind.
+- Promotion, ranking, deduplication, or linking of captured facts.
+- A reusable component library intended for cross-project use.
+- Cross-project memory or any schema for it.
 
 Out of scope for now:
 
-- A general-purpose knowledge extractor.
 - A full independent FusionControlCenter application.
 - Automatic CAD generation from unverified internet research.
-- A permanent reusable component library before real build data exists.
 
 ## 6. Standalone Knowledge Capture Boundary
 
-The standalone knowledge-capture project should be separate.
+Knowledge capture is a **separate project** that does not exist yet. This is a
+hard boundary, not a sequencing preference.
 
-This repository should not try to solve extraction, ranking, summarization, or
-cross-project memory yet. Its responsibility is to store capturable evidence in
-predictable places so a future tool can extract it without guessing.
+| This repository | The knowledge project |
+|---|---|
+| Makes things | Remembers things |
+| Produces finished artifacts and marks them finished | Extracts, normalises, deduplicates, links, promotes |
+| Records where each number came from | Decides what that provenance is worth |
+| Exports in stable, boring formats | Owns the schema it imports into |
+| Useful on its own, forever | Reads many projects, not just this one |
 
-The boundary is:
+Three rules hold the boundary:
 
-- This repo captures source material, decisions, measurements, tests, build
-  results, and reusable candidates.
-- The future standalone project extracts, normalizes, deduplicates, links, and
-  promotes knowledge across projects.
-- This repo should not depend on the future extractor to remain useful.
-- The future extractor should be able to read this repo without private local
-  paths, account data, or hidden machine-specific state.
+1. **This repo never depends on the knowledge project to be useful.** If the
+   other project is never built, nothing here breaks.
+2. **This repo never implements any part of it.** Not a prototype, not a
+   placeholder, not "just the schema".
+3. **The knowledge project reads this repo without special access** -- no private
+   local paths, no account data, no machine-specific state. Already enforced by
+   `tests/test_privacy.py`.
+
+The reason for the split is in `docs/brainstorming/decision-scope-split.md`. The
+short version: creation is bursty and project-shaped, knowledge is continuous and
+cross-project, and a knowledge system designed against a single wooden drone
+frame would be designed against one data point.
 
 ## 7. Invariants And Free Variables
 
@@ -204,62 +228,69 @@ are a lookup table, which is the only form an agent can apply consistently.
 
 ## 8. Knowledge Capture Contract
 
-During development, capturable information should be written where it belongs:
+This is a **handoff contract**, not a workflow. It says where finished things
+live so the knowledge project can collect them. It does not say what should be
+done with them.
 
-| Capturable data | Primary location |
-|---|---|
-| Raw dimensions | `docs/measurements.md` |
-| Accepted numeric design state | `params.yaml`, `components/loadout.yaml` |
-| Material assumptions | `components/materials.yaml` |
-| Planning and gate history | `docs/codex/` |
-| Design debates and direction changes | `docs/brainstorming/` |
-| Build outcomes and physical surprises | `docs/build-log.md` |
-| Candidate reusable facts | `docs/knowledge/capture-candidates.md` |
-| Photos and visual evidence | `photos/` |
-| Fusion models and neutral CAD exports | `cad/` |
-| Cutter-ready profiles | `dxf/` |
-| Repeatable Fusion operations | `fusion_scripts/` |
+### The named folders
 
-Knowledge candidates should identify their source, evidence, verification
-state, and reuse target. A future extractor should be able to promote a
-candidate into a reusable component card or lesson only after the candidate has
-enough evidence.
+Every kind of output has exactly one destination. Nothing important is allowed
+to live only in a working directory, a scratch file, or a conversation.
+
+| Output | Named folder | Format |
+|---|---|---|
+| Raw dimensions as measured | `docs/measurements.md` | Markdown |
+| Accepted numeric design state | `params.yaml`, `components/loadout.yaml` | YAML |
+| Material assumptions | `components/materials.yaml` | YAML |
+| Planning and gate history | `docs/codex/` | Markdown |
+| Design debates and direction changes | `docs/brainstorming/` | Markdown |
+| Build outcomes and physical surprises | `docs/build-log.md` | Markdown |
+| Photos and visual evidence | `photos/own/`, `photos/reference/` | JPG, PNG |
+| Fusion models and neutral CAD exports | `cad/` | `.f3d`, `.step` |
+| Cutter-ready profiles | `dxf/` | `.dxf` |
+| Repeatable Fusion operations | `fusion_scripts/` | Python |
+| The handoff contract itself | `docs/knowledge/capture-candidates.md` | Markdown |
+
+These names are stable. Renaming one is a breaking change to the handoff and
+requires a decision record.
 
 ### The promotion event
 
-"Enough evidence" is not a judgment call. In ICM terms, promotion moves an
-artifact from Layer 4 (this build) to Layer 3 (every later build's reference),
-and **a completed physical build is the event that authorises it.**
+There is one event this project recognises, and it is deliberately simple:
+**a completed physical build marks its artifacts finished.**
 
-The trigger runs in both directions:
+Finished means: the part was cut or the model was exported, the build happened,
+and the outcome is known. That is the moment an artifact stops being working
+material and becomes something worth exporting.
 
-| What happened | Effect on the candidate |
+| What happened | What this repo records |
 |---|---|
-| The part was measured, and the build confirmed it -- the screw fit, the frame flew | `measured` -> `verified`, stamped with the build that proved it |
-| The part was measured, and the build contradicted it -- the hole was wrong, the arm cracked | -> `rejected`, kept with the reason it failed |
-| The build never exercised it | State unchanged. A build that did not test something proves nothing about it |
+| The build confirmed it -- the screw fit, the frame flew | `verified`, stamped with the build that proved it |
+| The build contradicted it -- the hole was wrong, the arm cracked | `rejected`, kept with the reason it failed |
+| The build never exercised it | Unchanged. A build that did not test something proves nothing about it |
 
-Nothing reaches `verified` on inspection, agreement, or repetition alone. Only
-physical evidence sets that state, and only for what the build actually tested.
+`verified` is never set by inspection, agreement, or repetition. Only physical
+evidence sets it, and only for what the build actually tested.
+
+**This repo writes that label and stops.** Whether a `verified` artifact is worth
+reusing, how it relates to artifacts from other projects, and whether it becomes
+a reusable component card are all questions for the knowledge project.
 
 ### Provenance is per number, not per record
 
-A component record carries many dimensions and they rarely share a source. On a
-salvaged motor the bolt circle may be caliper-measured, the KV rating a vendor
+A finished component carries many dimensions and they rarely share a source. On
+a salvaged motor the bolt circle may be caliper-measured, the KV rating a vendor
 claim, the maximum thrust read off a kitchen scale, the stator size stamped on
-the bell. One verification state for the whole record would misdescribe most of
-them.
+the bell. One label for the whole record would misdescribe most of them.
 
-So each stored dimension carries its own `source`
-(`caliper` | `datasheet` | `vendor-claim` | `estimated` | `ai-derived`),
-its own verification state, and the build that verified it. This is what keeps
-Use Case 2's internet-sourced numbers from becoming indistinguishable from Use
-Case 1's measured ones once both are sitting in the same file.
+So each exported dimension carries its own `source`
+(`caliper` | `datasheet` | `vendor-claim` | `estimated` | `ai-derived`), its own
+state, and the build that verified it. This is what keeps Use Case 2's
+internet-sourced numbers from becoming indistinguishable from Use Case 1's
+measured ones -- a distinction that is free to record at the moment of
+measurement and unrecoverable afterwards.
 
-The candidate ledger in `docs/knowledge/capture-candidates.md` is currently one
-state per record, which is sufficient for lessons and Fusion techniques and
-insufficient for components. Reconciling it is queued as
-`claudePlan-knowledge-schema-1.md`.
+Recording it is in scope. Acting on it is not.
 
 ## 9. Where This Document Came From
 
@@ -271,33 +302,41 @@ justification rather than its conclusion:
 |---|---|
 | `idea-user-1.md` | The user's manifesto. Why the project exists, and both use cases |
 | `review-user-1.md` | Sequencing (build before capture), provenance, the invariant/free-variable split |
-| `review-icm-paper.md` | The Layer 3 / Layer 4 vocabulary and the promotion event of section 8 |
+| `review-icm-paper.md` | The Layer 3 / Layer 4 vocabulary |
 | `idea-web-workstation.md` | The guided measurement workstation, and why its data spine comes before its 3D layer |
 | `review-project-final.md` | Verification of this baseline, and the changes applied to it |
+| `decision-scope-split.md` | **The 2026-08-28 decision that knowledge capture leaves this project entirely** |
 
-Two conclusions carried forward from those documents are load-bearing enough to
-restate here.
+**Read `decision-scope-split.md` before the three reviews.** Those reviews were
+written while knowledge capture was still this project's responsibility, and
+they argue at length for mechanisms that now live elsewhere. They carry
+superseding banners, but the decision record is the authority.
 
-**Sequencing.** The project must not build a standalone knowledge-capture
-platform before it has real hardware development data to capture. The drone
-frame produces the first evidence. Designing a knowledge system around imagined
-data guarantees it will be shaped for the wrong data.
+Two conclusions from those documents survive the split intact, because they are
+about this project rather than the knowledge one.
 
-**Provenance.** A saved motor model, measurement, shortcut, Fusion trick, or
-design rule is only valuable if the project knows where it came from, whether it
-was measured or assumed, whether a build verified it, and where it was reused.
+**Sequencing.** The frame gets measured, cut, built, and flown. That is still the
+work, and it is still what produces everything the other project will eventually
+consume. Nothing about the split makes the physical build less urgent -- it makes
+it more so, because it is now the only thing this repo is for.
 
-The refinement on both: this repo should still prepare for the standalone
-knowledge-capture project now, through stable document locations, clear file
-purposes, and lightweight candidate records. That is not the same as building
-the extractor yet.
+**Provenance.** A measurement, model, or design rule is only worth exporting if
+the project records where it came from, whether it was measured or assumed, and
+whether a build confirmed it. That record is cheap at the moment of measurement
+and impossible to reconstruct later.
+
+What is gone is any obligation to *act on* that provenance beyond writing it
+down.
 
 ## 10. Roadmap
+
+**The authority is [`roadmap.md`](roadmap.md)**, which breaks the work into
+nine phases with observable exit criteria. The summary below is the shape of it.
 
 0. **Keep canonical checks runnable.** On this workstation `.pytest-run-tmp`
    became unreadable and Windows Application Control blocked the generated
    `frame.exe` shim. The canonical commands therefore use
-   `python.exe -m pytest -p no:cacheprovider` with `.pytest-work-tmp` and
+   `python.exe -m pytest -p no:cacheprovider --basetemp=.pytest-work-tmp` and
    `python.exe -m frame_tools.cli report`. No gate may substitute a nearby
    command silently.
 1. Finalize this project description and use it as the source-of-truth baseline.
@@ -310,13 +349,12 @@ the extractor yet.
    `docs/codex/claudePlan-web-workstation-1.md`, blocked on step 0. Its first
    phase is the data spine -- field spec and comment-preserving writer -- and
    the 3D viewer is deliberately a later plan.
-6. Cut, assemble, test, and log the first physical frame. **This is the step
-   that produces everything the knowledge system exists to capture.**
-7. Convert verified repeated lessons into component cards or reusable records,
-   using the promotion event defined in section 8.
-8. Extract the standalone knowledge-capture project after at least one real
-   hardware workflow has produced usable evidence -- and preferably on the
-   second project, when two instances exist to define the shared interface.
+6. Cut, assemble, test, and log the first physical frame. **This is the step the
+   whole repository exists for.**
+7. Deposit the finished artifacts into the named folders of section 8, with
+   provenance recorded. This is bookkeeping, not a system.
+8. **Stop.** The knowledge-capture project is separate work in a separate
+   repository, started when and if you choose. Nothing here waits on it.
 
 ## 11. Open Decisions
 
@@ -325,28 +363,35 @@ Answered by the reviews, recorded here so they are not reopened by default:
 - **Repository split.** Keep this repo as the instance and extract
   FusionControlCenter on the second project. Layer-2 tooling is written
   domain-blind from the start so extraction is a move, not a rewrite.
+- **Knowledge capture is a separate project.** Decided 2026-08-28. This repo
+  deposits finished products in named folders and does nothing further. See
+  `docs/brainstorming/decision-scope-split.md`.
 - **Verification states.** `unverified` / `measured` / `tested` / `verified` /
-  `rejected`, as defined in `docs/knowledge/capture-candidates.md`, with
-  promotion authorised only by a completed physical build.
+  `rejected`, as defined in `docs/knowledge/capture-candidates.md`. These are
+  **labels this repo records**, set only by physical evidence. They are not a
+  workflow this repo runs.
 - **MCP versus scripts.** The rule already in `fusion_scripts/README.md` holds:
   explore with MCP, then lock proven steps into a committed script. Extend the
   third-party server only for what scripts genuinely cannot do.
 
+Closed by the 2026-08-28 split, recorded so they are not reopened:
+
+- ~~What schema should reusable component cards use?~~ **Not this project's
+  question.** `claudePlan-knowledge-schema-1.md` is cancelled.
+- ~~Which parts of Omnissiah's knowledge workflow should be copied?~~ **Moved**
+  to the future knowledge project, where the comparison is meaningful.
+
 Still open:
 
-- What exact schema should reusable component cards use? Queued as
-  `claudePlan-knowledge-schema-1.md`.
 - When should the project name change from the drone-frame case study to the
-  broader FusionControlCenter identity? Proposed trigger: at extraction, on the
-  second project -- not before.
-- Which parts of Omnissiah's software knowledge workflow should be copied
-  directly, and which need hardware-specific changes? **Blocked:** this needs
-  Omnissiah's actual layout. If it already implements ICM concretely, FCC should
-  mirror its skeleton rather than invent a parallel one.
+  broader FusionControlCenter identity? Proposed trigger: on the second hardware
+  project -- not before.
 - Do ICM's numbered stages apply to the *process* only, leaving artifact folders
   intact -- or is the whole repository restructured ICM-style? Argued for the
   first in `docs/brainstorming/review-icm-paper.md` section 6.3; awaiting a
-  decision.
+  decision. **Narrowed by the split:** with knowledge capture gone, the only
+  pipelines left are the two use cases, so the case for restructuring the whole
+  repo is weaker than it was.
 - Is Fusion Electronics in scope? It is a second discipline of comparable size
   to the mechanical one, and the MCP server already exposes an electronics
   surface.

@@ -11,8 +11,8 @@ interpret the rest of the repository.
 | Portal | File | Type | Holds |
 |---|---|---|---|
 | `description____` | [description.md](description.md) | Markdown | Finalized project description and source-of-truth hierarchy |
-| `architecture____` | [architecture.md](architecture.md) | Markdown | Proposed technical architecture for the future web workstation |
 | `architecture____` | [architecture.md](architecture.md) | Markdown | Technical stack, decisions with rationale, trust-boundary mapping |
+| `roadmap____` | [roadmap.md](roadmap.md) | Markdown | Phase-by-phase build order from now to a finished project |
 
 ## Flow
 

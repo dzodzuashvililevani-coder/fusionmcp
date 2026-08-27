@@ -1,5 +1,12 @@
 # Final review: FusionControlCenter baseline
 
+> **SUPERSEDED IN PART -- 2026-08-28.** Knowledge capture is no longer this
+> project's responsibility. It moved to a separate project; this repository only
+> deposits finished products into named folders. Anything below that argues for
+> building capture, promotion, component cards, or an extractor **here** no
+> longer applies. See
+> [`decision-scope-split.md`](decision-scope-split.md) for the authority.
+
 **Created:** 2026-08-27
 **Reviews:** Codex's `docs/project/`, `docs/knowledge/`, and index changes of 2026-08-27
 **Also folds in:** `review-user-1.md`, `review-icm-paper.md`, `idea-web-workstation.md`

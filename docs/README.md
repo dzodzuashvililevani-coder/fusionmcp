@@ -12,7 +12,7 @@
 | `measure____` | [measurements.md](measurements.md) | Markdown | Caliper checklist for every salvaged part | **Fill this in first** |
 | `project____` | [project/](project/README.md) | Markdown | Project identity, mission, scope, source-of-truth hierarchy | Read before major changes |
 | `buildlog____` | [build-log.md](build-log.md) | Markdown | Dated log of what changed and what happened | Append as you go |
-| `knowledge____` | [knowledge/](knowledge/README.md) | Markdown | Capture candidates for a future standalone knowledge system | Add reusable lessons here |
+| `knowledge____` | [knowledge/](knowledge/README.md) | Markdown | Export contract for a separate knowledge project | Read before exporting |
 | `brainstorm____` | [brainstorming/](brainstorming/README.md) | Markdown | Rough feature ideas before a plan exists | Start feature thinking here |
 | `protocol____` | [protocol/](protocol/README.md) | Markdown | Shared Plan-Gate-Verify rules, contracts, trust boundaries | Read before multi-agent work |
 | `claude____` | [claude/](claude/README.md) | Markdown | Claude planner/verifier role docs | Read before planning |
@@ -35,9 +35,14 @@ copied into `params.yaml`, so you can tell a mis-measurement from a mis-typing.
 
 `build-log.md` is where the value compounds. Log the surprises especially:
 the reason the second frame is better than the first lives in that file. When a
-lesson looks reusable, add it to
-[`knowledge/capture-candidates.md`](knowledge/capture-candidates.md) with its
-source and verification state.
+build **finishes** something, record it in its named folder with its source and
+verification state -- the export contract is in
+[`knowledge/capture-candidates.md`](knowledge/capture-candidates.md).
+
+Knowledge capture itself is a **separate project** (decided 2026-08-28,
+[`brainstorming/decision-scope-split.md`](brainstorming/decision-scope-split.md)).
+This repo deposits finished products in named folders and does nothing further
+with them.
 
 ## Multi-agent work
 

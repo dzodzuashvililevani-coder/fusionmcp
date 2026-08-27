@@ -1,5 +1,12 @@
 # Review: the ICM research paper, and what it means for this project
 
+> **SUPERSEDED IN PART -- 2026-08-28.** Knowledge capture is no longer this
+> project's responsibility. It moved to a separate project; this repository only
+> deposits finished products into named folders. Anything below that argues for
+> building capture, promotion, component cards, or an extractor **here** no
+> longer applies. See
+> [`decision-scope-split.md`](decision-scope-split.md) for the authority.
+
 **Created:** 2026-08-27
 **Reviews:** Interpretable Context Methodology (arXiv:2603.16021)
 **Requested in:** `docs/brainstorming/idea-user-1.md` (Q1 of `review-user-1.md`)

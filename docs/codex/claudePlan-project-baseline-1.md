@@ -171,3 +171,15 @@ tests. E3 is addressed by deleting the misnamed duplicate review.
   from an elevated Windows shell outside Codex.
 - The design numbers are still guesses until the real hardware measurements are
   filled in.
+
+### Phase 3 sign-off - 2026-08-28
+
+**Verdict:** PASS by user direction.
+
+**Evidence:** The user reviewed Claude's follow-up, accepted moving knowledge
+capture out of this repository, and instructed Codex to review the new roadmap
+and start implementation.
+
+**Notes:** This closes the retroactive baseline-plan ambiguity from
+`review-project-final.md` F2 for purposes of Phase 1. Future multi-step work
+continues through Plan-Gate-Verify.

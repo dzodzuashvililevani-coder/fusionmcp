@@ -17,6 +17,7 @@ SKIP = {
     ".pytest-work-tmp",
     ".claude", ".codex", ".agents", "node_modules",
 }
+SKIP_PREFIXES = (".pytest-work-tmp",)
 DATA_TYPES = {
     "YAML", "Python", "Python (in Fusion)", "Markdown", "JSON",
     "Vector", "Binary CAD", "Raster",
@@ -28,7 +29,12 @@ def indexed_dirs() -> list[Path]:
     for path in ROOT.rglob("*"):
         if not path.is_dir():
             continue
-        if any(part in SKIP or part.endswith(".egg-info") for part in path.relative_to(ROOT).parts):
+        if any(
+            part in SKIP
+            or part.endswith(".egg-info")
+            or part.startswith(SKIP_PREFIXES)
+            for part in path.relative_to(ROOT).parts
+        ):
             continue
         out.append(path)
     return sorted(out)

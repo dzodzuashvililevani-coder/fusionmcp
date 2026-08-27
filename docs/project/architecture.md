@@ -38,7 +38,7 @@ Nine constraints determine almost every choice here. They are not preferences.
 | C4 | **The solver already exists in Python**, tested -- `geometry.py`, `validate.py`, `mass.py`, `thrust.py` | Rewriting it in another language means two solvers, violating "geometry is solved exactly once" |
 | C5 | **`params.yaml` is the single source of truth**, hand-edited, comments load-bearing, git-diffable | The store is the filesystem. Anything else is a cache |
 | C6 | **ICM adopted:** filesystem as state machine, plain text as universal interface | Reinforces C5. Durable state is files |
-| C7 | **Knowledge must survive decades**, not milliseconds | Optimise for readability and format stability over query speed |
+| C7 | **Exported artifacts must survive decades**, and be readable by a separate project | Stable, boring formats. Optimise for readability over query speed |
 | C8 | **Workshop conditions.** Possibly offline, hands dirty, screen at arm's length | Local-first, no CDN, legibility over density |
 | C9 | **Trust boundaries are written and binding** (`docs/protocol/trust-boundaries.md`) | Loopback only, path containment, subprocess timeouts, no secrets in files |
 
@@ -151,7 +151,8 @@ refusal.
    open and edit between stages. A database is opaque exactly where this method
    wants transparency.
 6. **Scale does not justify it.** One project has ~40 parameters. A hundred
-   component cards is a few hundred kilobytes. This is not a data problem.
+   exported component records is a few hundred kilobytes. This is not a data
+problem.
 
 **Cost.** No transactions across files, no referential integrity, no query
 language. Writes must be made atomic by hand (temp file + `os.replace`), and
@@ -169,10 +170,10 @@ files. (c) Promote SQLite to primary once the library grows.
 
 **Decision.** (b), **but not yet.**
 
-**Why.** Linear scans over YAML are free at ten component cards and fine at a
-hundred. They stop being fine when the library supports real queries -- *find
-every motor with a bolt circle between 8 and 10mm that a build verified* -- over
-thousands of files. At that point an index is the right tool.
+**Why.** Linear scans over YAML are free at ten exported records and fine at a
+hundred. They stop being fine when *this repository itself* needs real queries
+over thousands of files -- which, with knowledge capture split out, it very
+probably never will. Cross-project search belongs to the knowledge project.
 
 The rule that keeps it safe is absolute:
 
@@ -186,10 +187,11 @@ on one machine is infrastructure cosplay.
 **Cost.** A cache that can go stale. Mitigated by rebuild-on-demand and a
 file-modification-time check at startup.
 
-**Revisit when.** The component library exceeds ~500 cards, **or** a query the
+**Revisit when.** This repository holds more than ~500 exported records, **or** a query the
 UI needs takes over 200ms by scanning. Not before. Building it now would be
 optimising a problem that does not exist against a schema we have not learned
-yet -- the same inversion the project already rejected for knowledge capture.
+yet -- the same inversion the project already rejected when knowledge capture
+was split out into its own project.
 
 ---
 
@@ -752,6 +754,23 @@ D10, and the older document must not be the one Codex reads.
    and hard to keep.
 6. **Is the D4 reversal accepted**, or is stdlib still preferred with upload and
    streaming hand-rolled?
+
+### Codex review - 2026-08-28
+
+Accepted for Phase 1:
+
+- **D10 holds.** The `src/fcc/` / `src/frame_tools/` split is the right boundary
+  for the data spine. `src/fcc/` owns domain-blind field specs and surgical
+  writes; `frame_tools` remains the drone-specific solver and CLI entry point.
+- **`fields.yaml` belongs at the repository root** for Phase 1, beside
+  `params.yaml`, because Python reads it before any `web/` folder exists.
+- The no-database/files-as-truth decisions stay binding for the data spine.
+
+Deferred:
+
+- D4/D5 web stack decisions are accepted as architecture direction, but not
+  implemented in Phase 1.
+- Package manager and built-asset questions remain Phase 2 decisions.
 
 ---
 

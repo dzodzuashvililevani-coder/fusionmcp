@@ -29,7 +29,7 @@ with a finer-grained table.
 | `cli____` | [src/frame_tools/cli.py](src/frame_tools/cli.py) | Python | `frame` command entry point |
 | `project____` | [docs/project/](docs/project/README.md) | Markdown | Project identity, mission, scope, source-of-truth hierarchy |
 | `brainstorm____` | [docs/brainstorming/](docs/brainstorming/README.md) | Markdown | Rough feature ideas before a plan exists |
-| `knowledge____` | [docs/knowledge/](docs/knowledge/README.md) | Markdown | Capture candidates for a future standalone knowledge system |
+| `knowledge____` | [docs/knowledge/](docs/knowledge/README.md) | Markdown | Export contract: what finished work hands off to a separate knowledge project |
 | `protocol____` | [docs/protocol/](docs/protocol/README.md) | Markdown | Plan-Gate-Verify roles, contracts, gates, trust boundaries |
 | `claude____` | [docs/claude/](docs/claude/README.md) | Markdown | Claude planner/verifier role docs |
 | `codex____` | [docs/codex/](docs/codex/README.md) | Markdown | Codex implementer inbox: plans, gates, error fixes |
@@ -100,11 +100,15 @@ uv pip install -e ".[dev,dxf]"
 - Treat [docs/project/description.md](docs/project/description.md) as the
   mission baseline. Raw brainstorming becomes implementation truth only after
   it is promoted into a project, protocol, plan, or data file.
-- Put reusable lessons, Fusion shortcuts, measured component facts, and build
-  discoveries into
-  [docs/knowledge/capture-candidates.md](docs/knowledge/capture-candidates.md)
-  with source and verification state before any future standalone extractor
-  promotes them.
+- **This project makes things; it does not remember them.** Knowledge capture is
+  a separate project (decided 2026-08-28,
+  [docs/brainstorming/decision-scope-split.md](docs/brainstorming/decision-scope-split.md)).
+  Do not build an extractor, a component library, or a promotion mechanism here.
+- When something is **finished**, record it in its named folder from
+  `description.md` section 8, with its source and verification state attached.
+  The contract lives in
+  [docs/knowledge/capture-candidates.md](docs/knowledge/capture-candidates.md).
+  Writing the label is in scope; acting on it is not.
 - **`params.yaml` as committed must pass `frame check`.** A repo whose default
   numbers fail its own validator teaches you to ignore the validator. If a
   constraint can be *solved for*, solve it in `geometry.py` rather than only

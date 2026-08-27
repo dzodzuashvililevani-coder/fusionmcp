@@ -1,5 +1,12 @@
 # Review: idea-user-1 -- the FusionControlCenter manifesto
 
+> **SUPERSEDED IN PART -- 2026-08-28.** Knowledge capture is no longer this
+> project's responsibility. It moved to a separate project; this repository only
+> deposits finished products into named folders. Anything below that argues for
+> building capture, promotion, component cards, or an extractor **here** no
+> longer applies. See
+> [`decision-scope-split.md`](decision-scope-split.md) for the authority.
+
 **Created:** 2026-08-27
 **Reviews:** `docs/brainstorming/idea-user-1.md`
 **Author:** Claude (planner/verifier role, per `docs/claude/behaviour.md`)
