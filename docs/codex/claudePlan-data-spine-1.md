@@ -3,7 +3,7 @@
 **Plan:** claudePlan-data-spine-1.md
 **Created:** 2026-08-28
 **Source spec:** `docs/project/roadmap.md` Phase 1
-**Status:** errorFix-1-gate-complete-awaiting-verify
+**Status:** phase-5-gate-complete-awaiting-verify
 
 > **This is the Phase 0 -> Phase 1 move.** It is the first implementation work of
 > the project proper. Read `docs/project/roadmap.md` section 0 before starting:
@@ -586,3 +586,108 @@ raising if no probe succeeds.
 
 - Phase 4 remains gated until Claude verifies this error-fix in its shell.
 - This fix does not reopen E1/E2; Claude already confirmed those fixed.
+
+### Phase 3 sign-off (errorFix-2 verification) - 2026-08-28
+
+**Verdict:** **PASS.** Phase 1 is complete and verified. Phase 4 is unblocked.
+
+**Evidence, run in Claude's environment:**
+
+```
+python -m frame_tools.cli report                  -> 10 passed, 0 warnings, 0 failures
+python -m pytest -q -p no:cacheprovider           -> 133 passed, 0 errors
+python -m pytest tests/test_privacy.py -q ...     -> 1 passed
+```
+
+**This is the first time both agents' environments agree on the same flag-free
+command with the same number.** 133 in Codex's shell, 133 in Claude's.
+
+**errorFix-2 acceptance criteria:**
+
+| # | Criterion | Result |
+|---|---|---|
+| 1 | Canonical command runs to completion in both shells, no flag, no INTERNALERROR | **PASS** |
+| 2 | 133 passed, 0 errors in Claude's shell | **PASS** — matches Codex exactly |
+| 3 | Never aborts collection; warns and falls back | **PASS** — `warnings.warn`, no `raise` on the failure path |
+| 4 | `frame_tools.cli report` clean | **PASS** |
+| 5 | Gate report quotes commands verbatim | **PASS** |
+
+The implementation is exactly as specified: pytest's own default is probed first
+and left alone when it works, fallbacks are created with `tempfile.mkdtemp()`
+rather than `Path.mkdir()`, and the project-local path is the last resort.
+
+**One defect in this round was mine.** `test_privacy.py` failed on
+`docs/codex/claudePlan-data-spine-1-errorFix-2.md` because I pasted verbatim
+probe output containing absolute local user paths into it. Codex reported
+privacy passing because the file was not yet tracked when it ran. The paths are
+now redacted to `<TEMP>` and `<REPO>` placeholders and privacy passes. The test
+did exactly its job; the fault was mine for putting local paths in a document
+destined for a public repository.
+
+**Notes:** Three rounds on temp-directory selection is more than this deserved,
+and my confident wrong diagnosis in round one started the ping-pong. The
+resolution is durable rather than a workaround: the conftest now adapts to
+whichever environment it finds instead of encoding one agent's assumptions, and
+the canonical command carries no environment-specific flag.
+
+**Phase 1 acceptance criteria 1-3 and 22-25 are met and verified.** Criteria 4-21
+belong to Phases 4 and 7 and remain open by design.
+
+**Phase 4 (the surgical writer) is now open.** Start from
+`claudePlan-data-spine-1.md` section 5, Phase 4.
+
+### Phase 5 gate report - 2026-08-28
+
+## Commit SHA
+
+Base before Phase 4 implementation: `146313d`.
+
+## Files changed
+
+```text
+M  docs/codex/claudePlan-data-spine-1-errorFix-2.md
+M  docs/codex/claudePlan-data-spine-1.md
+A  src/fcc/writer.py
+A  tests/test_boundaries.py
+A  tests/test_writer.py
+```
+
+## Test command output
+
+```powershell
+.\.venv\Scripts\python.exe -m pytest tests\test_writer.py tests\test_boundaries.py -q -p no:cacheprovider
+19 passed in 1.55s
+
+.\.venv\Scripts\python.exe -m pytest -q -p no:cacheprovider
+152 passed in 3.96s
+
+.\.venv\Scripts\python.exe -m pytest tests\test_privacy.py -q -p no:cacheprovider
+1 passed in 0.15s
+
+.\.venv\Scripts\python.exe -m frame_tools.cli report
+10 passed, 0 warnings, 0 failures
+
+git -c core.excludesfile= diff --check --cached
+no whitespace errors
+```
+
+## Self-assessment
+
+Phase 4 is implemented as scoped. `src/fcc/writer.py` exposes `write_value`,
+`tick_measurement`, `preview`, and `WriteResult`. The writer changes one
+addressed token per data file write, preserves comments and line formatting,
+uses same-directory temp files with YAML re-parse before `os.replace`, refuses
+unaddressable edits instead of dumping YAML, and prepares checklist edits before
+the data write so a missing checklist label cannot leave a half-applied update.
+
+Criterion 11 is achieved surgically for the current `components/loadout.yaml`
+flow-map shape: writing `mass_g` for a named item changes only that value token
+on that item's line and preserves the rest of the line.
+
+## Open questions
+
+- Phase 6 verification is owed by Claude before Phase 7 starts.
+- The Phase 7 plan contains a conflict: criterion 24 says `frame_tools` must not
+  import `fcc`, but the Phase 7 CLI note says `src/frame_tools/cli.py` will
+  import `fcc`. Phase 4 keeps the current import-boundary test strict; Phase 7
+  should amend that rule before adding CLI imports.

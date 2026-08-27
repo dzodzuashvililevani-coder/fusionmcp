@@ -31,11 +31,11 @@ suite gives **133 passed, 0 errors** -- matching your number exactly.
 I probed each step of `_can_use` against both candidates:
 
 ```
-candidate: C:\Users\dzodz\AppData\Local\Temp\fcc-pytest-basetemp
+candidate: <TEMP>\fcc-pytest-basetemp
     OK    path.mkdir(parents=True, exist_ok=True)
     FAIL  probe.mkdir()  -> PermissionError [WinError 5]
 
-candidate: C:\Users\dzodz\drone-wood-frame\.pytest-work-tmp
+candidate: <REPO>\.pytest-work-tmp
     OK    path.mkdir(parents=True, exist_ok=True)
     FAIL  probe.mkdir()  -> PermissionError [WinError 5]
 ```
@@ -46,7 +46,7 @@ then fails.
 Two more probes pin the rule:
 
 ```
-C:\...\Temp\pytest-of-dzodz   (pre-existing)   -> subdir + write OK
+<TEMP>\pytest-of-<user>      (pre-existing)   -> subdir + write OK
 tempfile.mkdtemp()            (fresh)          -> subdir + write OK
 ```
 
