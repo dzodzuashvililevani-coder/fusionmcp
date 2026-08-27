@@ -502,3 +502,87 @@ that the running environment can create, list, write inside, and clean up.
 - Phase 4 remains gated until Claude verifies this error-fix.
 - No writer work was started and no measured values in `params.yaml` or
   `components/loadout.yaml` were changed.
+
+### Phase 3 sign-off (errorFix-1 re-verification) - 2026-08-28
+
+**Verdict:** FAIL -> errorFix-2 (conftest only). **E1 and E2 are CONFIRMED FIXED.**
+
+**Evidence:**
+- Commit inspected: `54611a1`. Local, not pushed.
+- `python -m pytest -q -p no:cacheprovider` -> **INTERNALERROR: RuntimeError: no writable pytest basetemp found**. Regression: this command gave 128 passed before `conftest.py` existed.
+- Same suite with a `mkdtemp` basetemp -> **133 passed, 0 errors**, matching Codex's number.
+- `python -m frame_tools.cli report` -> 10 passed, 0 warnings, 0 failures.
+
+**errorFix-1 acceptance criteria, measured:**
+
+| # | Criterion | Result |
+|---|---|---|
+| 1 | Orphaned `TODO` fails the suite | **PASS** — injected `camera.lens_protrusion_mm  # TODO`; `test_every_todo_target_has_a_field_and_every_field_targets_a_todo` failed. Reverted. |
+| 2 | Every label matches exactly one checklist line | **PASS** — audited all 21 fields: 16 labelled, 0 ambiguous |
+| 3 | Duplicate label raises `AmbiguousLabel` | **PASS** — raised in two places, two tests, both pass |
+| 4 | `measurements.md` and `fields.yaml` agree | **PASS** — labels changed on both sides in one commit |
+| 5 | Plan criterion 2 amended | **PASS** |
+| 6 | Canonical command clean without an env-specific flag | **FAIL** — aborts before collection in Claude's shell |
+| 7 | Both canonical commands pass | **FAIL** — via criterion 6 |
+
+**Root cause of the remaining failure (verified, not inferred):** a directory
+created by the process via `Path.mkdir()` cannot have subdirectories created
+inside it in Claude's sandbox. Pre-existing directories and `tempfile.mkdtemp()`
+results work. Both conftest candidates are freshly `mkdir`'d, so both probe as
+unusable and the conftest raises. Full probe output in errorFix-2 section 2.
+
+**My earlier diagnosis was also wrong** and is corrected in
+`decision-scope-split.md`: the variable was never "inside the project directory",
+it is directory *freshness*.
+
+**Notes:** The substance of this fix is good. The TODO coverage test now genuinely
+fails when it should — proven by injection, which is the only proof that counts
+for a test that previously could not fail. Label validation is stronger than
+specified: it rejects both duplicate labels across fields and labels matching
+multiple checklist lines. Scope was clean. One minor quality note, not blocking:
+the coverage test's failure message truncates to "Use -v to get more diff" rather
+than naming the orphaned key, so it satisfies the criterion's behaviour but not
+its diagnostic intent.
+
+**Phase 4 remains gated** on errorFix-2 only.
+
+### errorFix-2 gate report - 2026-08-28
+
+## Commit SHA
+
+Base before errorFix-2 implementation: `54611a1`.
+
+## Files changed
+
+```text
+M  conftest.py
+M  docs/brainstorming/decision-scope-split.md
+M  docs/codex/claudePlan-data-spine-1-errorFix-2.md
+M  docs/codex/claudePlan-data-spine-1.md
+```
+
+## Test command output
+
+```powershell
+.\.venv\Scripts\python.exe -m pytest -q -p no:cacheprovider
+133 passed in 3.37s
+
+.\.venv\Scripts\python.exe -m pytest tests\test_privacy.py -q -p no:cacheprovider
+1 passed in 0.23s
+
+.\.venv\Scripts\python.exe -m frame_tools.cli report
+10 passed, 0 warnings, 0 failures
+```
+
+## Self-assessment
+
+errorFix-2 is implemented with code changes scoped to `conftest.py`. The
+selection logic now leaves pytest's default temp root alone when it already
+works, uses `tempfile.mkdtemp()` for fallback roots, keeps a project-local
+fallback under the ignored `.pytest-work-tmp-*` prefix, and warns instead of
+raising if no probe succeeds.
+
+## Open questions
+
+- Phase 4 remains gated until Claude verifies this error-fix in its shell.
+- This fix does not reopen E1/E2; Claude already confirmed those fixed.

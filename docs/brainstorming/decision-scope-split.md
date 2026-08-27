@@ -111,8 +111,12 @@ pytest -q -p no:cacheprovider                               ->  116 passed, 0 er
 **already unreadable**. So was `.pytest-run-tmp` before it. Python creates and
 lists directories in the system temp without any trouble.
 
-**The cause is not stale state or a Windows policy on one directory. Any
-`--basetemp` pointed inside the project directory is created unreadable.**
+**CORRECTED 2026-08-28 (second correction, see errorFix-2).** This diagnosis
+was wrong. The location is not the variable -- *freshness* is. In Claude's
+sandbox, a directory created by the process via `Path.mkdir()` cannot have
+subdirectories created inside it, wherever it lives; pre-existing directories and
+`tempfile.mkdtemp()` results work normally. That is why pytest's own default root
+(pre-existing) worked while every explicit `--basetemp` failed.
 Renaming it -- the amendment Codex made -- could never have worked, because the
 name was never the problem.
 
