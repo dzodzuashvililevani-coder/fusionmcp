@@ -10,6 +10,8 @@ ROOT = project_root()
 CODEX = ROOT / "docs" / "codex"
 CLAUDE = ROOT / "docs" / "claude"
 BRAINSTORMING = ROOT / "docs" / "brainstorming"
+PROJECT = ROOT / "docs" / "project"
+KNOWLEDGE = ROOT / "docs" / "knowledge"
 PROTOCOL = ROOT / "docs" / "protocol"
 
 PLAN_SECTIONS = [
@@ -53,6 +55,61 @@ def test_protocol_folders_exist():
     assert CLAUDE.is_dir()
     assert CODEX.is_dir()
     assert BRAINSTORMING.is_dir()
+    assert PROJECT.is_dir()
+    assert KNOWLEDGE.is_dir()
+
+
+def test_project_description_defines_fusion_control_center_scope():
+    text = read(PROJECT / "description.md")
+    sections = [
+        "## 1. Project Identity",
+        "## 2. Why This Exists",
+        "## 3. Source Of Truth",
+        "## 4. Primary Use Cases",
+        "## 5. Current Scope",
+        "## 6. Standalone Knowledge Capture Boundary",
+        "## 7. Invariants And Free Variables",
+        "## 8. Knowledge Capture Contract",
+        "## 9. Where This Document Came From",
+        "## 10. Roadmap",
+        "## 11. Open Decisions",
+    ]
+    positions = [text.index(section) for section in sections]
+    assert positions == sorted(positions)
+
+    for phrase in [
+        "FusionControlCenter",
+        "Build Around Hardware In Hand",
+        "Start From An Idea",
+        "review-user-1.md",
+    ]:
+        assert phrase in text
+    assert "| Mission truth |" in text
+    assert "| Candidate knowledge |" in text
+    assert "### Method invariants" in text
+    assert "### Artifact invariants" in text
+    assert "### Free variables" in text
+    assert "### Change classification rule" in text
+    assert "Touches an artifact invariant -> major" in text
+    assert "Touches only free variables -> minor" in text
+    assert "### The promotion event" in text
+
+
+def test_knowledge_capture_staging_contract_exists():
+    text = read(KNOWLEDGE / "capture-candidates.md")
+    for phrase in [
+        "standalone knowledge-capture project",
+        "Verification States",
+        "Candidate Template",
+        "Dimension Provenance Template",
+        "verified",
+        "rejected",
+    ]:
+        assert phrase in text
+    for state in ["unverified", "measured", "tested", "verified", "rejected"]:
+        assert f"| `{state}` |" in text
+    for source in ["caliper", "datasheet", "vendor-claim", "estimated", "ai-derived"]:
+        assert source in text
 
 
 def test_shared_protocol_defines_method_surface():
@@ -67,6 +124,8 @@ def test_shared_protocol_defines_method_surface():
         assert phrase in text
     assert "hard halt" in text
     assert "planner is not the implementer" in text
+    assert r".\.venv\Scripts\python.exe -m pytest -q -p no:cacheprovider --basetemp=.pytest-work-tmp" in text
+    assert r".\.venv\Scripts\python.exe -m frame_tools.cli report" in text
 
 
 def test_contracts_define_handoff_types():

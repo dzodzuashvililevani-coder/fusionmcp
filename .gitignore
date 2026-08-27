@@ -3,6 +3,7 @@ __pycache__/
 .venv/
 .pytest_cache/
 .pytest-run-tmp/
+.pytest-work-tmp/
 *.egg-info/
 .claude/
 .codex/

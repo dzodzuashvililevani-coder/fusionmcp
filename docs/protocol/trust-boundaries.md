@@ -7,7 +7,7 @@ it passes a gate.
 
 - Keep durable state in repo files, not chat.
 - Keep local tool state out of git: `.claude/`, `.codex/`, `.agents/`,
-  `.venv/`, `.pytest_cache/`, and `.pytest-run-tmp/`.
+  `.venv/`, `.pytest_cache/`, `.pytest-run-tmp/`, and `.pytest-work-tmp/`.
 - Do not commit secrets, credentials, personal account names, or local absolute
   user paths.
 - Do not hand-edit generated machine outputs unless the folder README says it

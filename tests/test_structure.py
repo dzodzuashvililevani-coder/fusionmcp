@@ -14,6 +14,7 @@ from frame_tools.params import project_root
 ROOT = project_root()
 SKIP = {
     ".git", ".venv", "__pycache__", ".pytest_cache", ".pytest-run-tmp",
+    ".pytest-work-tmp",
     ".claude", ".codex", ".agents", "node_modules",
 }
 DATA_TYPES = {

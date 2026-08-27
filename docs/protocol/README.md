@@ -73,11 +73,13 @@ Gate reports must include:
 Use real tools with exit codes wherever possible:
 
 ```powershell
-.\.venv\Scripts\pytest.exe -q --basetemp=.pytest-run-tmp
-.\.venv\Scripts\frame.exe report
+.\.venv\Scripts\python.exe -m pytest -q -p no:cacheprovider --basetemp=.pytest-work-tmp
+.\.venv\Scripts\python.exe -m frame_tools.cli report
 ```
 
 No agent opinion replaces these commands. If a command fails, the gate fails.
+These module entry points are canonical because Windows Application Control may
+block unsigned `.exe` shims in `.venv\Scripts\`.
 
 ## Feature Complete
 

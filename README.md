@@ -19,8 +19,8 @@ install needs only `pyyaml`.
 Check it worked:
 
 ```powershell
-frame report      # must end "0 failures"
-pytest -q
+.\.venv\Scripts\python.exe -m frame_tools.cli report      # must end "0 failures"
+.\.venv\Scripts\python.exe -m pytest -q -p no:cacheprovider --basetemp=.pytest-work-tmp
 ```
 
 Then register the Fusion-side scripts, once:
@@ -37,22 +37,26 @@ to keep in sync.
 ## Use
 
 ```powershell
-frame report      # geometry + mass + checks (start here)
-frame geometry    # arm length, motor coordinates
-frame mass        # mass budget and centre of gravity
-frame check       # pre-cut validation - exits nonzero if something is wrong
-frame fusion      # resolved numbers as JSON, for the Fusion MCP
-frame fusion -o   # ...written to fusion_scripts/frame_params.json instead
-frame kerf-test   # write dxf/kerf_test.dxf, to measure your cutter's kerf
+.\.venv\Scripts\python.exe -m frame_tools.cli report      # geometry + mass + checks (start here)
+.\.venv\Scripts\python.exe -m frame_tools.cli geometry    # arm length, motor coordinates
+.\.venv\Scripts\python.exe -m frame_tools.cli mass        # mass budget and centre of gravity
+.\.venv\Scripts\python.exe -m frame_tools.cli check       # pre-cut validation - exits nonzero if something is wrong
+.\.venv\Scripts\python.exe -m frame_tools.cli fusion      # resolved numbers as JSON, for the Fusion MCP
+.\.venv\Scripts\python.exe -m frame_tools.cli fusion -o   # ...written to fusion_scripts/frame_params.json instead
+.\.venv\Scripts\python.exe -m frame_tools.cli kerf-test   # write dxf/kerf_test.dxf, to measure your cutter's kerf
 ```
+
+The shorter `frame ...` commands work when Windows allows the generated
+`.venv\Scripts\frame.exe` shim. This workstation currently blocks that shim, so
+the Python module entry point is the reliable command form.
 
 ## Workflow
 
 1. Measure your salvaged parts -> fill in `docs/measurements.md`
 2. Copy those numbers into `params.yaml` and `components/loadout.yaml`
-3. `frame report` until every check passes
-4. `frame kerf-test`, cut the coupon, put the measured kerf back in `params.yaml`
-5. `frame fusion -o`, then run `frame_sync_params` in Fusion to load the parameters
+3. Run the report command until every check passes
+4. Run `kerf-test`, cut the coupon, put the measured kerf back in `params.yaml`
+5. Run `fusion -o`, then run `frame_sync_params` in Fusion to load the parameters
 6. Model the plate and arms against those parameters, naming cut sketches `CUT_*`
 7. `frame_nest_parts` and `frame_mass_check` in Fusion, then `frame_export_dxf` -> `dxf/`
 8. Cut, assemble, and log what actually happened in `docs/build-log.md`
@@ -105,6 +109,8 @@ saying what it holds and in what format:
 | [tests/](tests/README.md) | Design invariants | Python |
 | [fusion_scripts/](fusion_scripts/README.md) | Scripts that run *inside* Fusion | Python (in Fusion) |
 | [docs/](docs/README.md) | Measurements in, lessons out | Markdown |
+| [docs/project/](docs/project/README.md) | Mission, scope, and source-of-truth hierarchy | Markdown |
+| [docs/knowledge/](docs/knowledge/README.md) | Capture candidates for future knowledge extraction | Markdown |
 | [docs/brainstorming/](docs/brainstorming/README.md) | Feature ideas before planning | Markdown |
 | [docs/protocol/](docs/protocol/README.md) | Plan-Gate-Verify method | Markdown |
 | [docs/claude/](docs/claude/README.md) | Claude planner/verifier docs | Markdown |

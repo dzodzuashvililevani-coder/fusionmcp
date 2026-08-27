@@ -5,7 +5,7 @@ components salvaged from a Temu toy drone.
 
 **`params.yaml` is the single source of truth.** Every calculation, every
 validation rule, and the Fusion model all derive from it. Change a number
-there, re-run `frame report`, rebuild.
+there, re-run `python -m frame_tools.cli report`, rebuild.
 
 ---
 
@@ -27,7 +27,9 @@ with a finer-grained table.
 | `fusionout____` | [src/frame_tools/fusion.py](src/frame_tools/fusion.py) | Python | Builds the Fusion payload + User Parameter table |
 | `dxfout____` | [src/frame_tools/dxf_out.py](src/frame_tools/dxf_out.py) | Python | Kerf calibration coupon (the only non-Fusion DXF) |
 | `cli____` | [src/frame_tools/cli.py](src/frame_tools/cli.py) | Python | `frame` command entry point |
+| `project____` | [docs/project/](docs/project/README.md) | Markdown | Project identity, mission, scope, source-of-truth hierarchy |
 | `brainstorm____` | [docs/brainstorming/](docs/brainstorming/README.md) | Markdown | Rough feature ideas before a plan exists |
+| `knowledge____` | [docs/knowledge/](docs/knowledge/README.md) | Markdown | Capture candidates for a future standalone knowledge system |
 | `protocol____` | [docs/protocol/](docs/protocol/README.md) | Markdown | Plan-Gate-Verify roles, contracts, gates, trust boundaries |
 | `claude____` | [docs/claude/](docs/claude/README.md) | Markdown | Claude planner/verifier role docs |
 | `codex____` | [docs/codex/](docs/codex/README.md) | Markdown | Codex implementer inbox: plans, gates, error fixes |
@@ -70,14 +72,14 @@ goes in a new `web/` folder with its own README.
 ## Commands
 
 ```powershell
-frame report      # geometry + mass + checks
-frame geometry    # arm length, motor coordinates
-frame mass        # mass budget and centre of gravity
-frame check       # pre-cut validation, exits nonzero on failure
-frame fusion      # resolved numbers as JSON on stdout
-frame fusion -o   # ...written to fusion_scripts/frame_params.json instead
-frame kerf-test   # write dxf/kerf_test.dxf to calibrate the cutter
-pytest            # design invariants
+.\.venv\Scripts\python.exe -m frame_tools.cli report      # geometry + mass + checks
+.\.venv\Scripts\python.exe -m frame_tools.cli geometry    # arm length, motor coordinates
+.\.venv\Scripts\python.exe -m frame_tools.cli mass        # mass budget and centre of gravity
+.\.venv\Scripts\python.exe -m frame_tools.cli check       # pre-cut validation, exits nonzero on failure
+.\.venv\Scripts\python.exe -m frame_tools.cli fusion      # resolved numbers as JSON on stdout
+.\.venv\Scripts\python.exe -m frame_tools.cli fusion -o   # ...written to fusion_scripts/frame_params.json instead
+.\.venv\Scripts\python.exe -m frame_tools.cli kerf-test   # write dxf/kerf_test.dxf to calibrate the cutter
+.\.venv\Scripts\python.exe -m pytest -q -p no:cacheprovider --basetemp=.pytest-work-tmp
 ```
 
 Setup, once:
@@ -95,6 +97,14 @@ uv pip install -e ".[dev,dxf]"
 - Never hardcode a dimension in Python. Add it to `params.yaml` and read it.
 - **Every folder has a `README.md`** with a portal table. Add a row when you
   add a file. `pytest` fails if a folder is missing its README.
+- Treat [docs/project/description.md](docs/project/description.md) as the
+  mission baseline. Raw brainstorming becomes implementation truth only after
+  it is promoted into a project, protocol, plan, or data file.
+- Put reusable lessons, Fusion shortcuts, measured component facts, and build
+  discoveries into
+  [docs/knowledge/capture-candidates.md](docs/knowledge/capture-candidates.md)
+  with source and verification state before any future standalone extractor
+  promotes them.
 - **`params.yaml` as committed must pass `frame check`.** A repo whose default
   numbers fail its own validator teaches you to ignore the validator. If a
   constraint can be *solved for*, solve it in `geometry.py` rather than only

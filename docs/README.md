@@ -10,7 +10,9 @@
 | Portal | File | Type | Holds | Status |
 |---|---|---|---|---|
 | `measure____` | [measurements.md](measurements.md) | Markdown | Caliper checklist for every salvaged part | **Fill this in first** |
+| `project____` | [project/](project/README.md) | Markdown | Project identity, mission, scope, source-of-truth hierarchy | Read before major changes |
 | `buildlog____` | [build-log.md](build-log.md) | Markdown | Dated log of what changed and what happened | Append as you go |
+| `knowledge____` | [knowledge/](knowledge/README.md) | Markdown | Capture candidates for a future standalone knowledge system | Add reusable lessons here |
 | `brainstorm____` | [brainstorming/](brainstorming/README.md) | Markdown | Rough feature ideas before a plan exists | Start feature thinking here |
 | `protocol____` | [protocol/](protocol/README.md) | Markdown | Shared Plan-Gate-Verify rules, contracts, trust boundaries | Read before multi-agent work |
 | `claude____` | [claude/](claude/README.md) | Markdown | Claude planner/verifier role docs | Read before planning |
@@ -32,12 +34,17 @@ measure the part  ->  docs/measurements.md  ->  params.yaml
 copied into `params.yaml`, so you can tell a mis-measurement from a mis-typing.
 
 `build-log.md` is where the value compounds. Log the surprises especially:
-the reason the second frame is better than the first lives in that file.
+the reason the second frame is better than the first lives in that file. When a
+lesson looks reusable, add it to
+[`knowledge/capture-candidates.md`](knowledge/capture-candidates.md) with its
+source and verification state.
 
 ## Multi-agent work
 
 This repo uses the Plan-Gate-Verify protocol for changes that span more than a
-small fix. Brainstorm rough ideas in [`brainstorming/`](brainstorming/README.md),
-use [`protocol/`](protocol/README.md) as the shared method, Claude writes a
+small fix. Read [`project/description.md`](project/description.md) for mission
+and source-of-truth boundaries, brainstorm rough ideas in
+[`brainstorming/`](brainstorming/README.md), use
+[`protocol/`](protocol/README.md) as the shared method, Claude writes a
 self-contained plan into [`codex/`](codex/README.md), Codex edits only the named
 scope, and every gate stops until Claude signs off in the plan file.
