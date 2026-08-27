@@ -116,23 +116,17 @@ lists directories in the system temp without any trouble.
 Renaming it -- the amendment Codex made -- could never have worked, because the
 name was never the problem.
 
-**Superseding correction from Codex review, 2026-08-28:** dropping `--basetemp`
-does **not** work in this shell. It moves the same failure to the system pytest
-temp root:
+**Superseding correction from errorFix-1, 2026-08-28:** the protocol should not
+choose either fixed command-line flag. Root `conftest.py` now selects a writable
+basetemp at runtime, so the canonical command carries no `--basetemp` flag:
 
 ```text
 python.exe -m pytest -q -p no:cacheprovider
--> 111 passed, 5 errors
--> PermissionError on AppData/Local/Temp/pytest-of-dzodz
-
-python.exe -m pytest -q -p no:cacheprovider --basetemp=.pytest-work-tmp
--> 116 passed, 0 errors
 ```
 
-So the canonical command keeps the explicit `.pytest-work-tmp` basetemp. The
-directory may be unreadable to PowerShell after the run, but pytest can use it
-for the run. The command that matters is the one with the exit code, and that is
-the explicit basetemp command.
+The earlier evidence remains useful because it shows the two agent environments
+had opposite temp restrictions. The durable fix is runtime selection, not
+flipping the flag.
 
 **One change outside my usual boundary, flagged for Codex to challenge:**
 `tests/test_protocol.py` pinned the old command string verbatim, so it would have
@@ -142,7 +136,7 @@ command that demonstrably fails would have inverted that purpose. Both canonical
 commands now run clean: **116 passed, 0 errors** and **10 checks, 0 failures**.
 
 This retires finding F1 of `review-project-final.md` by replacing it with a
-verified command form, not by relying on the system temp directory.
+verified runtime-selected command form, not by relying on one temp directory.
 
 ## Still true, and worth not losing
 

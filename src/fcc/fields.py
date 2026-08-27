@@ -8,8 +8,8 @@ from typing import Any
 
 import yaml
 
-from fcc.errors import LabelNotFound, SpecError
-from frame_tools.params import load_loadout, load_params, project_root
+from fcc.errors import AmbiguousLabel, LabelNotFound, SpecError
+from frame_tools.params import project_root
 
 ALLOWED_FILES = {"params.yaml", "components/loadout.yaml", "docs/measurements.md"}
 ALLOWED_TYPES = {"float", "int"}
@@ -58,12 +58,12 @@ def current_value(field: FieldSpec, root: Path | None = None) -> Any:
     """Read the current value addressed by a field from project files."""
     root = root or project_root()
     if field.file == "params.yaml":
-        value = _resolve_key_path(load_params(), field.key_path, field.id)
+        value = _resolve_key_path(_load_yaml(root, "params.yaml"), field.key_path, field.id)
         if field.index is not None:
             return value[field.index]
         return value
     if field.file == "components/loadout.yaml":
-        item = _loadout_item(field.item, field.id)
+        item = _loadout_item(field.item, field.id, root)
         return item[field.field]
     if field.file == "docs/measurements.md":
         return None
@@ -118,17 +118,25 @@ def _field_from_mapping(row: Any) -> FieldSpec:
 
 def _validate_fields(fields: list[FieldSpec], root: Path) -> None:
     seen: set[str] = set()
+    seen_labels: dict[str, str] = {}
     for field in fields:
         _validate_field_shape(field, seen)
         if field.file == "params.yaml":
-            _validate_params_field(field)
+            _validate_params_field(field, root)
         elif field.file == "components/loadout.yaml":
-            _validate_loadout_field(field)
+            _validate_loadout_field(field, root)
         elif field.file == "docs/measurements.md":
             pass
         else:
             raise SpecError(f"{field.id}: unsupported file {field.file!r}")
         if field.measurement_label:
+            owner = seen_labels.get(field.measurement_label)
+            if owner is not None:
+                raise AmbiguousLabel(
+                    f"{field.id}: measurement label {field.measurement_label!r} "
+                    f"is already used by {owner!r}"
+                )
+            seen_labels[field.measurement_label] = field.id
             _validate_measurement_label(field, root)
 
 
@@ -152,10 +160,10 @@ def _validate_field_shape(field: FieldSpec, seen: set[str]) -> None:
         raise SpecError(f"{field.id}: shape_hint is required")
 
 
-def _validate_params_field(field: FieldSpec) -> None:
+def _validate_params_field(field: FieldSpec, root: Path) -> None:
     if field.item is not None or field.field is not None:
         raise SpecError(f"{field.id}: item/field only apply to loadout.yaml")
-    value = _resolve_key_path(load_params(), field.key_path, field.id)
+    value = _resolve_key_path(_load_yaml(root, "params.yaml"), field.key_path, field.id)
     if field.index is not None:
         if not isinstance(value, list):
             raise SpecError(f"{field.id}: index given for non-list key_path")
@@ -163,20 +171,29 @@ def _validate_params_field(field: FieldSpec) -> None:
             raise SpecError(f"{field.id}: index {field.index} out of range")
 
 
-def _validate_loadout_field(field: FieldSpec) -> None:
+def _validate_loadout_field(field: FieldSpec, root: Path) -> None:
     if field.index is not None:
         raise SpecError(f"{field.id}: index is not used for loadout fields")
     if not field.item or not field.field:
         raise SpecError(f"{field.id}: loadout fields need item and field")
-    item = _loadout_item(field.item, field.id)
+    item = _loadout_item(field.item, field.id, root)
     if field.field not in item:
         raise SpecError(f"{field.id}: item {field.item!r} has no field {field.field!r}")
 
 
 def _validate_measurement_label(field: FieldSpec, root: Path) -> None:
-    text = (root / "docs" / "measurements.md").read_text(encoding="utf-8")
-    if field.measurement_label not in text:
+    lines = (root / "docs" / "measurements.md").read_text(encoding="utf-8").splitlines()
+    label = re.escape(field.measurement_label or "")
+    pattern = re.compile(rf"(?:^|\s)- \[[ xX]\] {label}:")
+    hits = [number for number, line in enumerate(lines, start=1) if pattern.search(line)]
+    if not hits:
         raise LabelNotFound(f"{field.id}: measurement label {field.measurement_label!r} not found")
+    if len(hits) > 1:
+        joined = ", ".join(str(hit) for hit in hits)
+        raise AmbiguousLabel(
+            f"{field.id}: measurement label {field.measurement_label!r} "
+            f"matches multiple checklist lines: {joined}"
+        )
 
 
 def _resolve_key_path(data: dict[str, Any], key_path: str, field_id: str) -> Any:
@@ -188,8 +205,16 @@ def _resolve_key_path(data: dict[str, Any], key_path: str, field_id: str) -> Any
     return value
 
 
-def _loadout_item(name: str | None, field_id: str) -> dict[str, Any]:
-    for item in load_loadout():
+def _load_yaml(root: Path, relpath: str) -> Any:
+    path = root / relpath
+    if not path.exists():
+        raise SpecError(f"missing {relpath}")
+    with path.open(encoding="utf-8") as fh:
+        return yaml.safe_load(fh) or {}
+
+
+def _loadout_item(name: str | None, field_id: str, root: Path) -> dict[str, Any]:
+    for item in _load_yaml(root, "components/loadout.yaml").get("items", []):
         if item.get("name") == name:
             return item
     raise SpecError(f"{field_id}: loadout item {name!r} not found")

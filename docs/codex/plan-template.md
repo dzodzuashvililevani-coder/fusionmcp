@@ -46,7 +46,7 @@ Each criterion must be observable and testable from outside the code.
 ## 6. Test commands (canonical)
 
 ```powershell
-.\.venv\Scripts\python.exe -m pytest -q -p no:cacheprovider --basetemp=.pytest-work-tmp
+.\.venv\Scripts\python.exe -m pytest -q -p no:cacheprovider
 .\.venv\Scripts\python.exe -m frame_tools.cli report
 ```
 

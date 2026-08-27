@@ -21,7 +21,7 @@ The repository-level fix is a deliberate protocol amendment: canonical gate
 commands now avoid both the locked temp path and the unsigned shim.
 
 ```powershell
-.\.venv\Scripts\python.exe -m pytest -q -p no:cacheprovider --basetemp=.pytest-work-tmp
+.\.venv\Scripts\python.exe -m pytest -q -p no:cacheprovider
 .\.venv\Scripts\python.exe -m frame_tools.cli report
 ```
 
@@ -122,8 +122,8 @@ Each is observable from outside the code.
 14. **Index updated.** `CLAUDE.md` has a portal row for `web/`, its "no
     JavaScript in this project" line is corrected, and the new data type is in
     its vocabulary table.
-15. **Canonical commands clean.** `python.exe -m pytest -q -p no:cacheprovider
-    --basetemp=.pytest-work-tmp` passes with zero errors, and `python.exe -m
+15. **Canonical commands clean.** `python.exe -m pytest -q -p no:cacheprovider`
+    passes with zero errors, and `python.exe -m
     frame_tools.cli report` exits 0.
 
 ## 5. Phases
@@ -178,7 +178,7 @@ Each is observable from outside the code.
 **Commands to run:**
 
 ```powershell
-.\.venv\Scripts\python.exe -m pytest -q -p no:cacheprovider --basetemp=.pytest-work-tmp
+.\.venv\Scripts\python.exe -m pytest -q -p no:cacheprovider
 .\.venv\Scripts\python.exe -m frame_tools.cli report
 git diff --stat
 ```
@@ -234,7 +234,7 @@ self-assessment, open questions
 **Commands to run:**
 
 ```powershell
-.\.venv\Scripts\python.exe -m pytest -q -p no:cacheprovider --basetemp=.pytest-work-tmp
+.\.venv\Scripts\python.exe -m pytest -q -p no:cacheprovider
 .\.venv\Scripts\python.exe -m frame_tools.cli report
 .\.venv\Scripts\python.exe -m frame_tools.cli ui --no-browser --port 8765
 git diff --stat
@@ -285,7 +285,7 @@ self-assessment, open questions
 **Commands to run:**
 
 ```powershell
-.\.venv\Scripts\python.exe -m pytest -q -p no:cacheprovider --basetemp=.pytest-work-tmp
+.\.venv\Scripts\python.exe -m pytest -q -p no:cacheprovider
 .\.venv\Scripts\python.exe -m frame_tools.cli report
 .\.venv\Scripts\python.exe -m frame_tools.cli ui --no-browser --port 8765
 git status --short
@@ -305,7 +305,7 @@ byte-diffed in `params.yaml`), and appends PASS or writes an error-fix
 ## 6. Test commands (canonical)
 
 ```powershell
-.\.venv\Scripts\python.exe -m pytest -q -p no:cacheprovider --basetemp=.pytest-work-tmp
+.\.venv\Scripts\python.exe -m pytest -q -p no:cacheprovider
 .\.venv\Scripts\python.exe -m frame_tools.cli report
 ```
 

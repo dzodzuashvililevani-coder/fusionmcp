@@ -124,7 +124,8 @@ def test_shared_protocol_defines_method_surface():
         assert phrase in text
     assert "hard halt" in text
     assert "planner is not the implementer" in text
-    assert r".\.venv\Scripts\python.exe -m pytest -q -p no:cacheprovider --basetemp=.pytest-work-tmp" in text
+    assert r".\.venv\Scripts\python.exe -m pytest -q -p no:cacheprovider" in text
+    assert "conftest.py" in text
     assert r".\.venv\Scripts\python.exe -m frame_tools.cli report" in text
 
 

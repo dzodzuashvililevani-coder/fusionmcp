@@ -17,5 +17,9 @@ class LabelNotFound(FccError):
     """A measurements.md label could not be found."""
 
 
+class AmbiguousLabel(FccError):
+    """A measurements.md label does not identify exactly one checkbox."""
+
+
 class PathRefused(FccError):
     """A path was outside the allowed project boundary."""

@@ -73,13 +73,15 @@ Gate reports must include:
 Use real tools with exit codes wherever possible:
 
 ```powershell
-.\.venv\Scripts\python.exe -m pytest -q -p no:cacheprovider --basetemp=.pytest-work-tmp
+.\.venv\Scripts\python.exe -m pytest -q -p no:cacheprovider
 .\.venv\Scripts\python.exe -m frame_tools.cli report
 ```
 
 No agent opinion replaces these commands. If a command fails, the gate fails.
 These module entry points are canonical because Windows Application Control may
-block unsigned `.exe` shims in `.venv\Scripts\`.
+block unsigned `.exe` shims in `.venv\Scripts\`. Pytest basetemp selection is
+handled by the root `conftest.py` so both agent environments use a writable temp
+root without adding environment-specific flags.
 
 ## Feature Complete
 

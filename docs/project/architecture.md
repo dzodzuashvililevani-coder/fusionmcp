@@ -787,6 +787,6 @@ The locked `.pytest-run-tmp` directory and blocked `frame.exe` shim are handled
 by the protocol-level canonical commands:
 
 ```powershell
-.\.venv\Scripts\python.exe -m pytest -q -p no:cacheprovider --basetemp=.pytest-work-tmp
+.\.venv\Scripts\python.exe -m pytest -q -p no:cacheprovider
 .\.venv\Scripts\python.exe -m frame_tools.cli report
 ```

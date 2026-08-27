@@ -336,7 +336,7 @@ nine phases with observable exit criteria. The summary below is the shape of it.
 0. **Keep canonical checks runnable.** On this workstation `.pytest-run-tmp`
    became unreadable and Windows Application Control blocked the generated
    `frame.exe` shim. The canonical commands therefore use
-   `python.exe -m pytest -p no:cacheprovider --basetemp=.pytest-work-tmp` and
+   `python.exe -m pytest -p no:cacheprovider` and
    `python.exe -m frame_tools.cli report`. No gate may substitute a nearby
    command silently.
 1. Finalize this project description and use it as the source-of-truth baseline.

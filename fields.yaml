@@ -164,7 +164,7 @@ fields:
     index: null
     item: null
     field: null
-    measurement_label: Mass
+    measurement_label: Battery mass
     min: 5.0
     max: 500.0
     type: float
@@ -203,7 +203,7 @@ fields:
     index: null
     item: flight_controller
     field: mass_g
-    measurement_label: Mass
+    measurement_label: FC mass
     min: 1.0
     max: 80.0
     type: float
@@ -229,7 +229,7 @@ fields:
     index: null
     item: camera
     field: mass_g
-    measurement_label: Mass
+    measurement_label: Camera mass
     min: 0.5
     max: 80.0
     type: float

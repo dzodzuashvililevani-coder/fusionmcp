@@ -79,9 +79,9 @@ scope.
 **Commands to run:**
 
 ```powershell
-.\.venv\Scripts\python.exe -m pytest -q -p no:cacheprovider --basetemp=.pytest-work-tmp
+.\.venv\Scripts\python.exe -m pytest -q -p no:cacheprovider
 .\.venv\Scripts\python.exe -m frame_tools.cli report
-.\.venv\Scripts\python.exe -m pytest tests\test_privacy.py -q -p no:cacheprovider --basetemp=.pytest-work-tmp
+.\.venv\Scripts\python.exe -m pytest tests\test_privacy.py -q -p no:cacheprovider
 git diff --check
 git status --short
 ```
@@ -94,7 +94,7 @@ or requests a follow-up fix.
 ## 6. Test commands (canonical)
 
 ```powershell
-.\.venv\Scripts\python.exe -m pytest -q -p no:cacheprovider --basetemp=.pytest-work-tmp
+.\.venv\Scripts\python.exe -m pytest -q -p no:cacheprovider
 .\.venv\Scripts\python.exe -m frame_tools.cli report
 ```
 

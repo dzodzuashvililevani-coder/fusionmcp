@@ -3,7 +3,7 @@
 **Plan:** claudePlan-data-spine-1.md
 **Created:** 2026-08-28
 **Source spec:** `docs/project/roadmap.md` Phase 1
-**Status:** phase-2-gate-complete-awaiting-verify
+**Status:** errorFix-1-gate-complete-awaiting-verify
 
 > **This is the Phase 0 -> Phase 1 move.** It is the first implementation work of
 > the project proper. Read `docs/project/roadmap.md` section 0 before starting:
@@ -82,7 +82,8 @@ Every criterion is observable from outside the code.
    enumerates `TODO` markers and fails if any lacks a row.
 2. **Valid by construction.** `fields.py` rejects a spec with a duplicate `id`,
    a `key_path` that does not resolve against the real file, a `file` outside the
-   three permitted, or `min > max`.
+   three permitted, `min > max`, or a `measurement_label` that does not match
+   exactly one checklist line in `docs/measurements.md`.
 3. **Ranges are plausible, not decorative.** Each field's `min`/`max` bracket a
    physically sensible range for that measurement.
 
@@ -225,7 +226,7 @@ Every criterion is observable from outside the code.
 **Commands to run:**
 
 ```powershell
-.\.venv\Scripts\python.exe -m pytest -q -p no:cacheprovider --basetemp=.pytest-work-tmp
+.\.venv\Scripts\python.exe -m pytest -q -p no:cacheprovider
 .\.venv\Scripts\python.exe -m frame_tools.cli report
 git diff --stat
 ```
@@ -324,7 +325,7 @@ appends PASS or writes an error-fix
 **Commands to run:**
 
 ```powershell
-.\.venv\Scripts\python.exe -m pytest -q -p no:cacheprovider --basetemp=.pytest-work-tmp
+.\.venv\Scripts\python.exe -m pytest -q -p no:cacheprovider
 .\.venv\Scripts\python.exe -m frame_tools.cli report
 .\.venv\Scripts\python.exe -m frame_tools.cli fields
 git status --short
@@ -344,16 +345,14 @@ result, and appends PASS or writes an error-fix
 ## 6. Test commands (canonical)
 
 ```powershell
-.\.venv\Scripts\python.exe -m pytest -q -p no:cacheprovider --basetemp=.pytest-work-tmp
+.\.venv\Scripts\python.exe -m pytest -q -p no:cacheprovider
 .\.venv\Scripts\python.exe -m frame_tools.cli report
 ```
 
-Both must show zero failures **and zero errors** at every gate. Do not drop the
-explicit `--basetemp` without re-testing. On this workstation the default
-system pytest temp root is also unreadable, while the explicit
-`.pytest-work-tmp` command above is the command that currently passes. See
-`docs/brainstorming/decision-scope-split.md` for the earlier diagnosis and this
-plan's gate report for the correction.
+Both must show zero failures **and zero errors** at every gate. Do not add a
+fixed `--basetemp` flag to the command; root `conftest.py` selects a writable
+basetemp at runtime because the two agent environments have opposite temp
+directory restrictions.
 
 Baseline before this plan starts: **116 passed, 0 errors** and
 **10 checks, 0 warnings, 0 failures**.
@@ -409,3 +408,97 @@ dependencies were added.
 - `measurement_label` is ambiguous for repeated labels like `Mass`; Phase 4's
   checklist writer will need section-aware matching or label disambiguation
   before it can tick those lines safely.
+
+### Phase 3 sign-off - 2026-08-28
+
+**Verdict:** FAIL -> errorFix-1
+
+**Evidence:**
+- Commit inspected: `0b07cd7` (base `6c3e82e`). Working tree clean, synced.
+- Diff: 7 files, +649/-1. Exactly the files listed in Phase 1 "Touches". No scope drift.
+- `python -m pytest -q -p no:cacheprovider` -> **128 passed, 0 errors**
+- `python -m pytest -q -p no:cacheprovider --basetemp=.pytest-work-tmp` -> **118 passed, 10 errors** (opposite of Codex's shell; see errorFix-1 E3)
+- `python -m frame_tools.cli report` -> 10 passed, 0 warnings, 0 failures
+- Spot-check of criterion 2 end to end on a tmp copy: duplicate id rejected, unresolvable key_path rejected. Loader behaves as specified.
+- Files inspected: `fields.yaml` (21 rows), `src/fcc/fields.py`, `errors.py`, `__init__.py`, `README.md`, `tests/test_fields.py`, `pyproject.toml`, gate report.
+- Label audit across all 21 fields vs `docs/measurements.md`: 13 of 16 labelled fields resolve uniquely; 3 do not.
+
+**Findings:**
+- **E1 (major)** — criterion 1 unmet. `EXPECTED_TODO_FIELDS` is a hardcoded set; the test never reads `params.yaml` or `loadout.yaml`, so a new `TODO` cannot make it fail.
+- **E2 (major)** — `battery_mass`, `flight_controller_mass`, and `camera_mass` all use label `Mass`, which matches 3 checklist lines under different sections. `_validate_measurement_label` checks presence, not uniqueness. Blocks criterion 12 in Phase 4.
+- **E3 (environment)** — the canonical command is not portable between the two agents' shells. Not a Phase 1 defect.
+
+**Notes:** Scope discipline was good — exactly the planned files, no adjacent features, no dependency added. `current_value()` is a small addition beyond the stated API; it is needed by `frame fields` in Phase 7 and is accepted. The 21-row count matches the plan's prediction exactly. Criterion 2 of this plan was incomplete on my part and is amended in errorFix-1 section 3.4.
+
+**Phase 4 remains gated** until errorFix-1 passes.
+
+### errorFix-1 gate report - 2026-08-28
+
+## Commit SHA
+
+Base before errorFix-1 implementation: `0b07cd7`.
+
+## Files changed
+
+```text
+A  conftest.py
+A  docs/codex/claudePlan-data-spine-1-errorFix-1.md
+M  CLAUDE.md
+M  README.md
+M  docs/brainstorming/decision-scope-split.md
+M  docs/brainstorming/idea-web-workstation.md
+M  docs/codex/claudePlan-data-spine-1.md
+M  docs/codex/claudePlan-project-baseline-1.md
+M  docs/codex/claudePlan-web-workstation-1.md
+M  docs/codex/plan-template.md
+M  docs/measurements.md
+M  docs/project/architecture.md
+M  docs/project/description.md
+M  docs/protocol/README.md
+M  fields.yaml
+M  src/fcc/errors.py
+M  src/fcc/fields.py
+M  tests/test_fields.py
+M  tests/test_protocol.py
+```
+
+## Test command output
+
+```powershell
+.\.venv\Scripts\python.exe -m pytest tests\test_fields.py -q -p no:cacheprovider
+14 passed in 1.61s
+
+.\.venv\Scripts\python.exe -m pytest -q -p no:cacheprovider
+133 passed in 2.59s
+
+.\.venv\Scripts\python.exe -m pytest tests\test_privacy.py -q -p no:cacheprovider
+1 passed in 0.16s
+
+.\.venv\Scripts\python.exe -m frame_tools.cli report
+10 passed, 0 warnings, 0 failures
+
+git diff --check
+no whitespace errors
+```
+
+## Self-assessment
+
+errorFix-1 is implemented as scoped. The TODO coverage test now reads the real
+`params.yaml` and `components/loadout.yaml` text and detects orphaned TODOs
+instead of comparing against a hardcoded expected set. Measurement labels are
+globally unique in `fields.yaml`, the checklist uses unambiguous labels for
+flight controller, battery, and camera mass, and `fields.py` rejects duplicate
+field labels or labels matching more than one checklist line with
+`AmbiguousLabel`. The field loader now also honors its supplied `root` for
+params/loadout reads, so copy-based writer tests can validate isolated project
+trees.
+
+For the pytest environment split, the canonical command now carries no
+`--basetemp` flag. Root `conftest.py` probes candidate temp roots and selects one
+that the running environment can create, list, write inside, and clean up.
+
+## Open questions
+
+- Phase 4 remains gated until Claude verifies this error-fix.
+- No writer work was started and no measured values in `params.yaml` or
+  `components/loadout.yaml` were changed.

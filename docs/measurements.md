@@ -21,7 +21,7 @@ Photograph each part next to a ruler and drop it in `photos/`.
 - [ ] Mounting hole pattern (square, hole to hole): ____ mm  (16 / 20 / 25.5 / 30.5)
 - [ ] Board size: ____ x ____ mm
 - [ ] Screw size: ____
-- [ ] Mass: ____ g
+- [ ] FC mass: ____ g
 - [ ] ESCs integrated on the board, or separate? ____
 
 ## ESCs (if separate)
@@ -30,12 +30,12 @@ Photograph each part next to a ruler and drop it in `photos/`.
 
 ## Battery
 - [ ] L x W x H: ____ x ____ x ____ mm
-- [ ] Mass: ____ g   - [ ] Cell count / voltage: ____   - [ ] Capacity: ____ mAh
+- [ ] Battery mass: ____ g   - [ ] Cell count / voltage: ____   - [ ] Capacity: ____ mAh
 - [ ] Connector type: ____
 
 ## Camera
 - [ ] Body width: ____ mm   - [ ] Mount ear spacing: ____ mm
-- [ ] Mass: ____ g   - [ ] Lens protrusion: ____ mm
+- [ ] Camera mass: ____ g   - [ ] Lens protrusion: ____ mm
 
 ## VTX / receiver / antenna
 - [ ] VTX size and mass: ____

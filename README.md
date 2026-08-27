@@ -20,7 +20,7 @@ Check it worked:
 
 ```powershell
 .\.venv\Scripts\python.exe -m frame_tools.cli report      # must end "0 failures"
-.\.venv\Scripts\python.exe -m pytest -q -p no:cacheprovider --basetemp=.pytest-work-tmp
+.\.venv\Scripts\python.exe -m pytest -q -p no:cacheprovider
 ```
 
 Then register the Fusion-side scripts, once:
@@ -106,6 +106,7 @@ saying what it holds and in what format:
 |---|---|---|
 | [components/](components/README.md) | Part masses, positions, wood densities | YAML |
 | [fields.yaml](fields.yaml) | Measurement field spec for writer/UI inputs | YAML |
+| [conftest.py](conftest.py) | Pytest temp-root selection for agent environments | Python |
 | [src/frame_tools/](src/frame_tools/README.md) | The calculation engine | Python |
 | [src/fcc/](src/fcc/README.md) | Domain-blind field spec and writer support | Python |
 | [tests/](tests/README.md) | Design invariants | Python |

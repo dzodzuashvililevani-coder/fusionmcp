@@ -186,7 +186,7 @@ The protocol now uses canonical Python module commands that avoid both
 environment faults:
 
 ```powershell
-.\.venv\Scripts\python.exe -m pytest -q -p no:cacheprovider --basetemp=.pytest-work-tmp
+.\.venv\Scripts\python.exe -m pytest -q -p no:cacheprovider
 .\.venv\Scripts\python.exe -m frame_tools.cli report
 ```
 
@@ -222,7 +222,7 @@ environment faults:
   `python -m frame_tools.cli report` exits 0.
 - A request for a path outside the project root is refused.
 - An uploaded `.HEIC` becomes a downscaled `.jpg` in `photos/own/` with no EXIF.
-- `python -m pytest -q -p no:cacheprovider --basetemp=.pytest-work-tmp`
+- `python -m pytest -q -p no:cacheprovider`
   passes with the new `web/` folder present.
 
 ## Generalisation: the honest version of "workstation for everything"
