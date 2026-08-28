@@ -1,12 +1,18 @@
 """Validate the FCC FastAPI layer."""
 from __future__ import annotations
 
+import os
 from pathlib import Path
+import socket
+from types import SimpleNamespace
 import shutil
+import subprocess
+import sys
 
 from fastapi.testclient import TestClient
 import pytest
 
+from frame_tools import cli
 from fcc.api.app import create_app
 from frame_tools.report_api import build_report
 from frame_tools.params import project_root
@@ -25,6 +31,14 @@ def copy_project_data(tmp_path: Path) -> None:
         "docs/measurements.md",
     ):
         shutil.copy2(ROOT / relpath, tmp_path / relpath)
+
+
+def copy_cli_project(tmp_path: Path) -> None:
+    copy_project_data(tmp_path)
+    (tmp_path / "src").mkdir(exist_ok=True)
+    ignore = shutil.ignore_patterns("__pycache__")
+    shutil.copytree(ROOT / "src" / "frame_tools", tmp_path / "src" / "frame_tools", ignore=ignore)
+    shutil.copytree(ROOT / "src" / "fcc", tmp_path / "src" / "fcc", ignore=ignore)
 
 
 def client_for(tmp_path: Path) -> TestClient:
@@ -255,3 +269,211 @@ def test_no_cors_middleware_is_installed(tmp_path):
     app = create_app(report_provider=lambda: build_report(tmp_path), root=tmp_path)
 
     assert all("CORSMiddleware" not in repr(middleware.cls) for middleware in app.user_middleware)
+
+
+def test_frame_ui_with_no_build_exits_with_exact_build_command(tmp_path, monkeypatch, capsys):
+    copy_project_data(tmp_path)
+    monkeypatch.setattr(cli.params, "project_root", lambda: tmp_path)
+
+    result = cli.cmd_ui(SimpleNamespace(no_browser=True, port=0))
+
+    captured = capsys.readouterr()
+    assert result == 2
+    assert cli.WEB_BUILD_COMMAND in captured.err
+    assert "Traceback" not in captured.err
+
+
+def test_frame_ui_checks_build_before_importing_web_stack(tmp_path, monkeypatch):
+    copy_project_data(tmp_path)
+    monkeypatch.setattr(cli.params, "project_root", lambda: tmp_path)
+
+    def fail_import():
+        raise AssertionError("web stack should not be imported before build check")
+
+    monkeypatch.setattr(cli, "_load_web_stack", fail_import)
+
+    assert cli.cmd_ui(SimpleNamespace(no_browser=True, port=8765)) == 2
+
+
+def test_frame_ui_import_error_mentions_web_extra(tmp_path, monkeypatch, capsys):
+    copy_project_data(tmp_path)
+    (tmp_path / "web" / "dist").mkdir(parents=True)
+    (tmp_path / "web" / "dist" / "index.html").write_text("<html></html>", encoding="utf-8")
+    monkeypatch.setattr(cli.params, "project_root", lambda: tmp_path)
+
+    def raise_import_error():
+        raise ImportError("No module named 'fastapi'")
+
+    monkeypatch.setattr(cli, "_load_web_stack", raise_import_error)
+
+    result = cli.cmd_ui(SimpleNamespace(no_browser=True, port=0))
+
+    captured = capsys.readouterr()
+    assert result == 2
+    assert "install the web extra" in captured.err
+    assert "Traceback" not in captured.err
+
+
+def test_frame_ui_refuses_port_that_is_already_in_use(tmp_path, monkeypatch, capsys):
+    copy_project_data(tmp_path)
+    (tmp_path / "web" / "dist").mkdir(parents=True)
+    (tmp_path / "web" / "dist" / "index.html").write_text("<html></html>", encoding="utf-8")
+    monkeypatch.setattr(cli.params, "project_root", lambda: tmp_path)
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as listener:
+        listener.bind(("127.0.0.1", 0))
+        listener.listen()
+        port = listener.getsockname()[1]
+
+        result = cli.cmd_ui(SimpleNamespace(no_browser=True, port=port))
+
+    captured = capsys.readouterr()
+    assert result == 2
+    assert f"127.0.0.1:{port} is already in use" in captured.err
+    assert "Traceback" not in captured.err
+
+
+def test_existing_cli_subcommand_runs_when_web_extra_is_unavailable(tmp_path):
+    copy_cli_project(tmp_path)
+    blocker = tmp_path / "blocker"
+    blocker.mkdir()
+    (blocker / "sitecustomize.py").write_text(
+        "\n".join(
+            [
+                "import builtins",
+                "_real_import = builtins.__import__",
+                "def _blocked(name, *args, **kwargs):",
+                "    if name.split('.')[0] in {'fastapi', 'uvicorn'}:",
+                "        raise ImportError(f'blocked optional web dependency: {name}')",
+                "    return _real_import(name, *args, **kwargs)",
+                "builtins.__import__ = _blocked",
+            ]
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    env = os.environ.copy()
+    env["PYTHONPATH"] = os.pathsep.join([str(blocker), str(tmp_path / "src")])
+
+    fields = subprocess.run(
+        [sys.executable, "-m", "frame_tools.cli", "fields"],
+        cwd=tmp_path,
+        env=env,
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+
+    assert fields.returncode == 0, fields.stderr
+    assert "MEASUREMENT FIELDS" in fields.stdout
+
+    (tmp_path / "web" / "dist").mkdir(parents=True)
+    (tmp_path / "web" / "dist" / "index.html").write_text("<html></html>", encoding="utf-8")
+    ui = subprocess.run(
+        [sys.executable, "-m", "frame_tools.cli", "ui", "--no-browser", "--port", "0"],
+        cwd=tmp_path,
+        env=env,
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+
+    assert ui.returncode == 2
+    assert "install the web extra" in ui.stderr
+    assert "Traceback" not in ui.stderr
+
+
+def test_frame_ui_binds_loopback_waits_health_and_skips_browser(tmp_path, monkeypatch):
+    copy_project_data(tmp_path)
+    (tmp_path / "web" / "dist").mkdir(parents=True)
+    (tmp_path / "web" / "dist" / "index.html").write_text("<html></html>", encoding="utf-8")
+    monkeypatch.setattr(cli.params, "project_root", lambda: tmp_path)
+
+    class FakeApp:
+        def __init__(self):
+            self.mounts = []
+
+        def mount(self, path, app, name):
+            self.mounts.append((path, app, name))
+
+    class FakeStaticFiles:
+        def __init__(self, directory, html):
+            self.directory = directory
+            self.html = html
+
+    fake_app = FakeApp()
+    calls = {}
+
+    def fake_create_app(report_provider, root):
+        calls["root"] = root
+        calls["report_provider"] = report_provider
+        return fake_app
+
+    def fake_build_report(root):
+        calls["report_root"] = root
+
+    def fake_run_uvicorn(uvicorn_module, app, host, port):
+        calls["uvicorn"] = (uvicorn_module, app, host, port)
+
+    def fake_wait_for_health(url):
+        calls["health_url"] = url
+        return True
+
+    def fail_open_browser(_url):
+        raise AssertionError("browser should not open with --no-browser")
+
+    monkeypatch.setattr(
+        cli,
+        "_load_web_stack",
+        lambda: (fake_create_app, FakeStaticFiles, fake_build_report, object()),
+    )
+    monkeypatch.setattr(cli, "_run_uvicorn", fake_run_uvicorn)
+    monkeypatch.setattr(cli, "_wait_for_health", fake_wait_for_health)
+    monkeypatch.setattr(cli.webbrowser, "open", fail_open_browser)
+
+    result = cli.cmd_ui(SimpleNamespace(no_browser=True, port=0))
+
+    assert result == 0
+    assert calls["root"] == tmp_path
+    assert calls["health_url"] == "http://127.0.0.1:0/api/health"
+    assert calls["uvicorn"][2:] == ("127.0.0.1", 0)
+    assert fake_app.mounts[0][0] == "/"
+    assert fake_app.mounts[0][1].directory == tmp_path / "web" / "dist"
+    assert fake_app.mounts[0][1].html is True
+
+
+def test_frame_ui_opens_browser_after_health(tmp_path, monkeypatch):
+    copy_project_data(tmp_path)
+    (tmp_path / "web" / "dist").mkdir(parents=True)
+    (tmp_path / "web" / "dist" / "index.html").write_text("<html></html>", encoding="utf-8")
+    monkeypatch.setattr(cli.params, "project_root", lambda: tmp_path)
+
+    opened = []
+
+    monkeypatch.setattr(
+        cli,
+        "_load_web_stack",
+        lambda: (
+            lambda **_kwargs: SimpleNamespace(mount=lambda *args, **_kwargs: None),
+            lambda **_kwargs: object(),
+            lambda _root: object(),
+            object(),
+        ),
+    )
+    monkeypatch.setattr(cli, "_run_uvicorn", lambda *_args: None)
+    monkeypatch.setattr(cli, "_wait_for_health", lambda _url: True)
+    monkeypatch.setattr(cli.webbrowser, "open", opened.append)
+
+    result = cli.cmd_ui(SimpleNamespace(no_browser=False, port=0))
+
+    assert result == 0
+    assert opened == ["http://127.0.0.1:0/"]
+
+
+def test_frame_ui_help_exits_zero(capsys):
+    with pytest.raises(SystemExit) as exc:
+        cli.main(["ui", "--help"])
+
+    captured = capsys.readouterr()
+    assert exc.value.code == 0
+    assert "--no-browser" in captured.out
+    assert "--port" in captured.out

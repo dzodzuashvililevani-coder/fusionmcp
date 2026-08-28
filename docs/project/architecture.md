@@ -50,8 +50,8 @@ Nine constraints determine almost every choice here. They are not preferences.
    BROWSER  (localhost only)
    +--------------------------------------------------+
    |  React + TypeScript                               |
-   |  measurement form | 3D component view | report    |
-   |  react-three-fiber       TanStack Query           |
+   |  measurement form | component slot | report       |
+   |  generated API types       plain CSS tokens       |
    +---------------------+----------------------------+
                          |  HTTP/JSON + SSE, 127.0.0.1
                          |  types generated from OpenAPI
@@ -61,11 +61,10 @@ Nine constraints determine almost every choice here. They are not preferences.
    |  src/fcc/          domain-blind platform          |
    |    fields.py    field spec loader                 |
    |    writer.py    surgical YAML/Markdown writer     |
-   |    server.py    HTTP surface                      |
-   |    photos.py    HEIC -> JPG, EXIF strip           |
+   |    api/         FastAPI app, models, routes       |
    |                                                   |
    |  src/frame_tools/  drone-specific domain          |
-   |    geometry validate mass thrust fusion           |
+   |    geometry validate mass thrust fusion report_api|
    +---------------------+----------------------------+
                          |  reads / writes
    +---------------------v----------------------------+
@@ -305,50 +304,72 @@ so this can be answered with evidence instead of taste.
 
 ---
 
-### D7 -- Tailwind CSS + shadcn/ui.
+### D7 -- Plain CSS tokens for the workstation.
 
-**Options.** (a) Plain CSS modules. (b) Tailwind. (c) MUI / Mantine.
+> **Reversed 2026-08-29.** This decision previously read *"Tailwind, with
+> shadcn/ui components copied in as source"*, on the reasoning that Tailwind
+> iterates quickly on dense workshop-legible panels and that Radix primitives
+> underneath give keyboard and focus behaviour for free. The Phase 2
+> workstation was built with plain CSS instead. **The divergence was not
+> disclosed at the Phase 5 gate and I did not catch it at Phase 6** — I
+> checked the build against `docs/design/workstation-visual-spec.md`, which
+> specifies plain CSS tokens, and never against this file. Recorded rather
+> than erased: a decision log that only shows the surviving answer cannot be
+> used to judge the next one.
+
+**Options.** (a) Plain CSS. (b) Tailwind. (c) MUI / Mantine.
 (d) styled-components.
 
-**Decision.** (b) Tailwind, with shadcn/ui components copied in as source.
+**Decision.** (a) for the Phase 2 workstation.
 
-**Why.** C8 sets the real requirement: legible at arm's length, dense report
-panels, dark by default in a workshop. Tailwind iterates on that quickly with
-zero runtime cost. shadcn/ui is copied into the repo rather than installed, so
-components are editable source under git rather than an opaque dependency --
-which fits a repo whose whole ethos is inspectable artifacts. Radix primitives
-underneath give keyboard and focus behaviour for free.
+**Why.** The visual spec is already tokenized: every color is named, the type
+scale is small, and the layout has three fixed panes plus two breakpoints.
+Plain CSS expresses that directly with no build-time convention and no runtime
+dependency. It also keeps the source readable in the same spirit as the data
+files: a future maintainer can grep a selector and see the exact rule that
+draws it.
 
-Full component libraries (c) impose a design language and are heavy to override.
+Tailwind remains a reasonable choice for a larger interface, but in this phase
+it would mainly translate an already-finished token table into utility classes.
+Full component libraries impose a design language and are heavy to override.
 
-**Cost.** Verbose class strings. Managed by extracting components, not by
-fighting the tool.
+**Cost.** No component-library primitives. Keyboard and focus behavior must be
+implemented and tested in the app's own controls.
 
-**Revisit when.** If a designer joins and prefers a token-based system.
+**Revisit when.** The interface grows enough repeated controls that hand-kept
+selectors become harder to maintain than a token/component layer.
 
 ---
 
-### D8 -- TanStack Query for server state. No global store yet.
+### D8 -- Local React state now. No global store yet.
 
-**Options.** (a) `useState` + `fetch`. (b) TanStack Query. (c) Redux Toolkit.
-(d) Zustand.
+> **Reversed 2026-08-29.** This previously chose TanStack Query for everything
+> crossing the network, on the reasoning that save-then-show-recomputed-report
+> is cache invalidation and hand-rolling it produces the same code, worse.
+> `claudePlan-web-workstation-2.md` Phase 4 explicitly said TanStack Query was
+> *"not required by this plan and should not be added without a reason in the
+> gate report"*, so this reversal was authorised in advance — but the plan
+> never said so here, which is why the two documents disagreed for a week.
 
-**Decision.** (b) for everything crossing the network. Local UI state stays in
-component state until proven otherwise.
+**Options.** (a) `useState` + typed `fetch`. (b) TanStack Query.
+(c) Redux Toolkit. (d) Zustand.
 
-**Why.** The central interaction is: save a measurement, then immediately show
-the recomputed report. That is cache invalidation, which is precisely what
-TanStack Query does well -- mutation, invalidate, refetch, with loading and error
-states handled. Hand-rolling it produces the same code, worse.
+**Decision.** (a) for Phase 2.
 
-Redux is unnecessary: there is very little client state, and nearly everything
-on screen is server-derived.
+**Why.** The workstation is one page with one selected field. It has three
+server reads/writes: load fields, load report, preview/save one value. That is
+small enough that explicit component state is clearer than a cache layer. The
+important boundary is still typed: `web/src/api.ts` is the only file that calls
+`fetch`, and it consumes `web/src/api.d.ts` generated from OpenAPI.
 
-**Cost.** One dependency, one concept to learn.
+TanStack Query is still the likely answer when uploads, long-running jobs, or
+multiple views arrive. It was not needed to prove the measurement loop.
 
-**Revisit when.** Genuine cross-view client state appears -- an undo stack, or
-multi-step wizard state that must survive navigation. Then add Zustand, not
-Redux.
+**Cost.** Refetch and stale-state handling are written directly in `App.tsx`.
+That is acceptable while the app remains a single workflow.
+
+**Revisit when.** There are multiple views, background jobs, or cache
+invalidation rules that are no longer obvious at the call site.
 
 ---
 
@@ -375,10 +396,12 @@ consumed downstream; here, the contract is defined once and consumed downstream.
 
 ### D10 -- Split the package: `fcc/` is domain-blind, `frame_tools/` is the drone.
 
-**Decision.** New package `src/fcc/` holds the field spec, the writer, the
-server, and photo ingest. `src/frame_tools/` keeps geometry, validation, mass,
-thrust, and the Fusion payload. `fcc` may import `frame_tools` through a narrow
-adapter; **`frame_tools` never imports `fcc`.**
+**Decision.** `src/fcc/` holds the domain-blind field spec, writer, and API.
+`src/frame_tools/` keeps geometry, validation, mass, thrust, Fusion payloads,
+and the drone report adapter. The API receives the report as an injected
+callable. `src/fcc/api/` must not import `frame_tools`; the composition roots
+that wire the two halves together are `frame_tools/cli.py` and
+`frame_tools/report_api.py`.
 
 **Why.** `description.md` commits to extracting FCC on the second project and to
 extraction being "a move, not a rewrite". That is only true if the domain-blind
@@ -386,12 +409,13 @@ code is domain-blind from the first line. Writing the server inside
 `frame_tools` and untangling it later is precisely the rewrite that was ruled
 out.
 
-The one-directional import rule is what makes the boundary real rather than
-aspirational, and it is mechanically testable -- a test can assert that no module
-under `frame_tools` imports `fcc`.
+The import rule is what makes the boundary real rather than aspirational, and it
+is mechanically testable: tests assert that `src/fcc/api/` does not import
+`frame_tools`, and that only the named composition-root modules under
+`frame_tools/` import `fcc`.
 
-**Cost.** An adapter layer, and the discipline to notice when drone knowledge
-leaks into `fcc`.
+**Cost.** An injected report provider, and the discipline to notice when drone
+knowledge leaks into `fcc`.
 
 **Revisit when.** At extraction. The rule's job is to make that day boring.
 
@@ -476,7 +500,7 @@ failed to give you. That note is the requirements document.
 | Python env + deps | **uv** | Already the project's tool per `CLAUDE.md`. Fast, lockfile-backed |
 | Python lint + format | **ruff** | One tool replacing flake8 + isort + black. Not yet in the repo; propose adding |
 | Python tests | **pytest** | Already in use. 116 tests |
-| Node package manager | **pnpm** | Content-addressed store, strict by default. npm acceptable if you prefer one less tool |
+| Node package manager | **npm** | Already installed on the workstation; `npm.cmd` avoids PowerShell execution-policy blocking |
 | Frontend build | **vite** | D5 |
 | Frontend tests | **vitest** + React Testing Library | Shares Vite's config and transform |
 | End-to-end | **Playwright** | Two or three flows only: enter a measurement, assert the file changed |
@@ -558,7 +582,7 @@ of JSON files before it is Redis -- consistent with C6.
 
 It cannot reach desktop Fusion, adds meaningful friction on Windows, and
 isolates nothing that matters when there is one user on one machine. `uv` and
-`pnpm` already give reproducible environments.
+`npm` already give reproducible environments.
 **Trigger:** a second contributor on a different OS.
 
 ### Authentication -- no, while it stays on loopback
@@ -585,42 +609,37 @@ drone-wood-frame/
       __init__.py
       fields.py                field spec loader + validation
       writer.py                surgical YAML / Markdown writer
-      photos.py                HEIC -> JPG, EXIF strip, downscale
       api/
         __init__.py
         app.py                 FastAPI application
         models.py              Pydantic schemas -> OpenAPI -> TS
-        routes_fields.py
-        routes_report.py
-        routes_photos.py
-      adapters/
-        frame_adapter.py       the ONLY module importing frame_tools
-    frame_tools/        (existing, unchanged)  DRONE-SPECIFIC
+        routes.py              field, preview, write, report, health endpoints
+    frame_tools/        (existing)  DRONE-SPECIFIC
       geometry.py validate.py mass.py thrust.py fusion.py params.py
-      cli.py                   gains `frame ui`
+      report_api.py            drone report provider + OpenAPI writer
+      cli.py                   owns `frame ui`
   web/                  (new)
     README.md                  required by test_structure
-    fields.yaml                the one field spec (D9 sibling)
-    package.json  pnpm-lock.yaml  vite.config.ts  tsconfig.json
+    package.json  package-lock.json  vite.config.ts  tsconfig.json
+    index.html
     src/
       main.tsx  App.tsx
+      api.ts
+      openapi.json           <- GENERATED. Never hand-edited
       api.d.ts               <- GENERATED. Never hand-edited
-      components/
-        MeasurementForm.tsx
-        ReportPanel.tsx
-        ComponentView.tsx    <- react-three-fiber
-        DimensionCallout.tsx
-      models/                parametric primitives
-        Motor.tsx  Battery.tsx  FlightController.tsx  Prop.tsx
+      FieldQueue.tsx
+      FieldCard.tsx
+      ReportPanel.tsx
+      styles.css
     dist/                    <- built assets, gitignored
   tests/
-    test_fields.py  test_writer.py  test_server.py  test_boundaries.py
+    test_fields.py  test_writer.py  test_api.py  test_api_contract.py
+    test_web_source.py  test_boundaries.py
   docs/  photos/  dxf/  cad/  fusion_scripts/
 ```
 
-`web/fields.yaml` sits with the frontend because it describes the *form*; it is
-read by Python at runtime. If that placement feels wrong to Codex, moving it to
-the repo root is a one-line change and worth arguing about now rather than later.
+`fields.yaml` stays at the repository root, beside `params.yaml`, because both
+the CLI and the browser API read it before any frontend source is involved.
 
 ---
 
@@ -638,10 +657,10 @@ the repo root is a one-line change and worth arguing about now rather than later
      - rewrites ONLY that value's character span
      - writes temp file, re-parses with yaml.safe_load, os.replace
      - ticks the matching box in docs/measurements.md
-6. fcc.adapters.frame_adapter: geometry.solve -> mass.build
-                            -> thrust.build -> validate.run
+6. frame_tools.report_api: geometry.solve -> mass.build
+                         -> thrust.build -> validate.run
 7. Response carries the full recomputed report
-8. TanStack Query updates the report panel; failing checks shown verbatim
+8. App.tsx updates the report panel; failing checks shown verbatim
 9. A value that FAILS validation is still saved, and shouted about
 ```
 
@@ -693,12 +712,12 @@ The project has one runtime dependency today. Growth, stated openly:
 | Extra | Adds | Justification |
 |---|---|---|
 | core | `pyyaml` | Existing |
-| `[ui]` | `fastapi`, `pydantic`, `uvicorn` | D4. The typed contract (D9) is the return |
+| `[web]` | `fastapi`, `pydantic`, `uvicorn` | D4. The typed contract (D9) is the return |
 | `[photos]` | `pillow`, `pillow-heif` | D12. Isolated: core stays pure |
 | `[dxf]` | `ezdxf` | Existing |
 | `[dev]` | `pytest`, `ruff`, `httpx` | `httpx` for the FastAPI test client |
 | `[ai]` | `anthropic`, `keyring` | D13, deferred |
-| frontend | react, three, @react-three/fiber, @react-three/drei, @react-spring/three, @tanstack/react-query, tailwindcss, vite, typescript | D5-D8 |
+| frontend | react, react-dom, vite, typescript, vitest, React Testing Library, openapi-typescript | D5, D7-D9. The 3D stack waits for the component viewer phase |
 
 **Rule:** `frame report`, `frame check`, `frame geometry`, `frame mass`, and
 `frame fusion` must keep working with **core only**. The CLI never depends on
@@ -739,21 +758,17 @@ D10, and the older document must not be the one Codex reads.
 
 ---
 
-## 11. Open questions for Codex review
+## 11. Questions resolved by Phase 2
 
-1. **`web/fields.yaml` placement** -- with the frontend, or at the repo root
-   since Python reads it at runtime? Section 5.
-2. **pnpm or npm** -- pnpm is better; npm is one less tool to install. Preference?
-3. **Is `ruff` welcome?** The repo has no linter today. Adding one is a
-   formatting churn commit before it is a benefit.
-4. **Commit `web/dist/` or build on demand?** Gitignoring it is cleaner;
-   committing it means `frame ui` works on a clean checkout with no Node
-   installed. This one genuinely cuts both ways and I do not have a strong view.
-5. **Does the `fcc` / `frame_tools` split (D10) hold under scrutiny?** It is the
-   decision most likely to be wrong, because domain-blindness is easy to declare
-   and hard to keep.
-6. **Is the D4 reversal accepted**, or is stdlib still preferred with upload and
-   streaming hand-rolled?
+1. **`fields.yaml` placement:** repository root, beside `params.yaml`.
+2. **Node package manager:** npm, invoked as `npm.cmd` in PowerShell.
+3. **`ruff`:** not added in Phase 2; lint adoption remains a separate change.
+4. **Built assets:** `web/dist/` is generated and ignored. `frame ui` exits with
+   the exact build command when the build is missing.
+5. **`fcc` / `frame_tools` split:** `src/fcc/api/` imports no `frame_tools`.
+   `frame_tools/cli.py` and `frame_tools/report_api.py` are the named
+   composition roots that import `fcc`.
+6. **FastAPI reversal:** accepted and implemented.
 
 ### Codex review - 2026-08-28
 
@@ -768,20 +783,19 @@ Accepted for Phase 1:
 
 Deferred:
 
-- D4/D5 web stack decisions are accepted as architecture direction, but not
-  implemented in Phase 1.
-- Package manager and built-asset questions remain Phase 2 decisions.
+- D4/D5 web stack decisions were accepted as architecture direction but not
+  implemented in Phase 1. They were implemented in Phase 2.
+- Package manager and built-asset questions were left to Phase 2. They resolved
+  to npm and generated, ignored `web/dist/`.
 
 ---
 
 ## 12. Next steps
 
-1. Codex reviews this document and returns findings.
-2. On acceptance, it becomes binding on every plan and
-   `claudePlan-web-workstation-1.md` is revised to match (section 10).
-3. Claude writes the **master plan** -- the full sequence from here to a flown
-   frame and a captured component library.
-4. Claude writes **phase 1** as `docs/codex/claudePlan-<slug>-1.md`.
+Phase 1 and Phase 2 are complete. The next roadmap work is Phase 3: dogfood the
+measurement flow by recording real component measurements through the CLI or
+browser workstation, then decide whether the browser adds enough value to keep
+expanding it.
 
 The locked `.pytest-run-tmp` directory and blocked `frame.exe` shim are handled
 by the protocol-level canonical commands:

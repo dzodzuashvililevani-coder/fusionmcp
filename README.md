@@ -14,7 +14,14 @@ uv pip install -e ".[dev,dxf]"
 ```
 
 `dev` gives you `pytest`, `dxf` gives you `ezdxf` for the kerf coupon. The base
-install needs only `pyyaml`.
+install needs only `pyyaml`. The browser workstation needs the optional web
+extra plus the built frontend:
+
+```powershell
+uv pip install -e ".[web]"
+npm.cmd --prefix web install
+npm.cmd --prefix web run build
+```
 
 Check it worked:
 
@@ -46,6 +53,7 @@ to keep in sync.
 .\.venv\Scripts\python.exe -m frame_tools.cli fusion      # resolved numbers as JSON, for the Fusion MCP
 .\.venv\Scripts\python.exe -m frame_tools.cli fusion -o   # ...written to fusion_scripts/frame_params.json instead
 .\.venv\Scripts\python.exe -m frame_tools.cli kerf-test   # write dxf/kerf_test.dxf, to measure your cutter's kerf
+.\.venv\Scripts\python.exe -m frame_tools.cli ui          # serve the browser workstation on 127.0.0.1
 ```
 
 The shorter `frame ...` commands work when Windows allows the generated

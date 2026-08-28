@@ -29,6 +29,7 @@ with a finer-grained table.
 | `dxfout____` | [src/frame_tools/dxf_out.py](src/frame_tools/dxf_out.py) | Python | Kerf calibration coupon (the only non-Fusion DXF) |
 | `cli____` | [src/frame_tools/cli.py](src/frame_tools/cli.py) | Python | `frame` command entry point |
 | `fcc____` | [src/fcc/](src/fcc/README.md) | Python | Domain-blind field spec and writer support |
+| `fccapi____` | [src/fcc/api/](src/fcc/api/README.md) | Python | Domain-blind FastAPI routes for the browser workstation |
 | `pytestconf____` | [conftest.py](conftest.py) | Python | Shared pytest temp-root selection for agent environments |
 | `project____` | [docs/project/](docs/project/README.md) | Markdown | Project identity, mission, scope, source-of-truth hierarchy |
 | `brainstorm____` | [docs/brainstorming/](docs/brainstorming/README.md) | Markdown | Rough feature ideas before a plan exists |
@@ -92,6 +93,7 @@ server's schema rather than written by hand -- see
 .\.venv\Scripts\python.exe -m frame_tools.cli fusion      # resolved numbers as JSON on stdout
 .\.venv\Scripts\python.exe -m frame_tools.cli fusion -o   # ...written to fusion_scripts/frame_params.json instead
 .\.venv\Scripts\python.exe -m frame_tools.cli kerf-test   # write dxf/kerf_test.dxf to calibrate the cutter
+.\.venv\Scripts\python.exe -m frame_tools.cli ui          # serve the local browser workstation
 .\.venv\Scripts\python.exe -m pytest -q -p no:cacheprovider
 ```
 
@@ -100,6 +102,9 @@ Setup, once:
 ```powershell
 uv venv
 uv pip install -e ".[dev,dxf]"
+uv pip install -e ".[web]"
+npm.cmd --prefix web install
+npm.cmd --prefix web run build
 ```
 
 ## Conventions

@@ -16,6 +16,7 @@ whether it was; the report explains it to a human.
 | Portal | File | Type | Holds |
 |---|---|---|---|
 | `phase1____` | [phase-1-data-spine.md](phase-1-data-spine.md) | Markdown | Phase 1: the field spec, the surgical writer, the two CLI commands, and a full map of the project |
+| `phase2____` | [phase-2-workstation.md](phase-2-workstation.md) | Markdown | Phase 2: the FastAPI API, React workstation, `frame ui`, and browser write-through verification |
 
 ## What belongs in a report
 

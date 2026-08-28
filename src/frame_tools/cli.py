@@ -1,12 +1,18 @@
 """Command line entry point.
 
-    frame report | geometry | mass | check | fields | set | fusion | kerf-test
+    frame report | geometry | mass | check | fields | set | fusion | kerf-test | ui
 """
 from __future__ import annotations
 
 import argparse
+import importlib
 import json
+import socket
 import sys
+import threading
+import time
+import urllib.request
+import webbrowser
 from pathlib import Path
 from typing import Any
 
@@ -17,6 +23,9 @@ from . import dxf_out, fusion, geometry, mass, params, thrust, validate
 
 BAR = "-" * 62
 DEFAULT_FUSION_JSON = "fusion_scripts/frame_params.json"
+UI_HOST = "127.0.0.1"
+DEFAULT_UI_PORT = 8765
+WEB_BUILD_COMMAND = "npm.cmd --prefix web install; npm.cmd --prefix web run build"
 
 
 def _build_all():
@@ -176,6 +185,44 @@ def cmd_kerf_test(args) -> int:
     return 0
 
 
+def cmd_ui(args) -> int:
+    root = params.project_root()
+    dist = root / "web" / "dist"
+    index = dist / "index.html"
+    if not index.exists():
+        print(
+            f"error: web build not found at {index}. Run: {WEB_BUILD_COMMAND}",
+            file=sys.stderr,
+        )
+        return 2
+    if not _port_available(UI_HOST, args.port):
+        print(f"error: {UI_HOST}:{args.port} is already in use", file=sys.stderr)
+        return 2
+
+    try:
+        create_app, static_files, build_report, uvicorn = _load_web_stack()
+    except ImportError as exc:
+        print(
+            f"error: install the web extra before running `frame ui`: {exc}",
+            file=sys.stderr,
+        )
+        print('       .\\.venv\\Scripts\\python.exe -m pip install -e ".[web]"', file=sys.stderr)
+        return 2
+
+    app = create_app(report_provider=lambda: build_report(root), root=root)
+    app.mount("/", static_files(directory=dist, html=True), name="web")
+    url = f"http://{UI_HOST}:{args.port}/"
+
+    print(BAR)
+    print("FRAME UI")
+    print(BAR)
+    print(f"  serving             {url}")
+    print(f"  build               {dist}")
+    print("  browser             disabled" if args.no_browser else "  browser             opening")
+
+    return _run_ui_server(uvicorn, app, args.port, open_browser=not args.no_browser, url=url)
+
+
 def _display_value(value: Any, unit: str) -> str:
     if isinstance(value, float):
         text = f"{value:g}"
@@ -192,6 +239,62 @@ def _range_warning(field: FieldSpec, value: int | float) -> str | None:
     return f"{field.id} is outside the expected {low}..{high} {field.unit} range."
 
 
+def _load_web_stack():
+    create_app = importlib.import_module("fcc.api.app").create_app
+    static_files = importlib.import_module("fastapi.staticfiles").StaticFiles
+    build_report = importlib.import_module("frame_tools.report_api").build_report
+    uvicorn = importlib.import_module("uvicorn")
+    return create_app, static_files, build_report, uvicorn
+
+
+def _run_ui_server(uvicorn_module, app, port: int, *, open_browser: bool, url: str) -> int:
+    ready_url = f"http://{UI_HOST}:{port}/api/health"
+    server = threading.Thread(
+        target=_run_uvicorn,
+        args=(uvicorn_module, app, UI_HOST, port),
+        daemon=True,
+    )
+    server.start()
+    if not _wait_for_health(ready_url):
+        print(f"error: frame ui did not answer {ready_url}", file=sys.stderr)
+        return 2
+    if open_browser:
+        webbrowser.open(url)
+    try:
+        while server.is_alive():
+            server.join(0.5)
+    except KeyboardInterrupt:
+        print("\n  stopped")
+        return 0
+    return 0
+
+
+def _run_uvicorn(uvicorn_module, app, host: str, port: int) -> None:
+    uvicorn_module.run(app, host=host, port=port)
+
+
+def _wait_for_health(url: str, *, timeout_s: float = 10.0) -> bool:
+    deadline = time.monotonic() + timeout_s
+    while time.monotonic() < deadline:
+        try:
+            with urllib.request.urlopen(url, timeout=0.5) as response:
+                if response.status == 200:
+                    return True
+        except OSError:
+            time.sleep(0.1)
+    return False
+
+
+def _port_available(host: str, port: int) -> bool:
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as probe:
+        probe.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        try:
+            probe.bind((host, port))
+        except OSError:
+            return False
+    return True
+
+
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(prog="frame", description=__doc__)
     sub = ap.add_subparsers(dest="cmd")
@@ -203,6 +306,7 @@ def main(argv: list[str] | None = None) -> int:
         ("fields", cmd_fields, "measurement fields and current values"),
         ("fusion", cmd_fusion, "resolved parameters as JSON for Fusion"),
         ("kerf-test", cmd_kerf_test, "write dxf/kerf_test.dxf to calibrate your cutter"),
+        ("ui", cmd_ui, "serve the browser measurement workstation"),
     ]:
         sp = sub.add_parser(name, help=help_)
         sp.set_defaults(func=fn)
@@ -214,6 +318,9 @@ def main(argv: list[str] | None = None) -> int:
         if name == "kerf-test":
             sp.add_argument("-o", "--out", metavar="PATH", default=None,
                             help="output path (default dxf/kerf_test.dxf)")
+        if name == "ui":
+            sp.add_argument("--no-browser", action="store_true", help="serve without opening a browser")
+            sp.add_argument("--port", type=int, default=DEFAULT_UI_PORT, help=f"port (default {DEFAULT_UI_PORT})")
     sp = sub.add_parser("set", help="write one measurement value and run checks")
     sp.add_argument("id", help="field id from `frame fields`")
     sp.add_argument("value", help="measured value")
