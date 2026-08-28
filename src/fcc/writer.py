@@ -119,7 +119,8 @@ def preview(field: FieldSpec, value: Any, root: Path | None = None) -> str:
 
 
 def _read_target(root: Path, relpath: str) -> str:
-    return _resolve_target(root, relpath).read_text(encoding="utf-8")
+    with _resolve_target(root, relpath).open(encoding="utf-8", newline="") as fh:
+        return fh.read()
 
 
 def _write_if_changed(
