@@ -41,6 +41,8 @@ to keep in sync.
 .\.venv\Scripts\python.exe -m frame_tools.cli geometry    # arm length, motor coordinates
 .\.venv\Scripts\python.exe -m frame_tools.cli mass        # mass budget and centre of gravity
 .\.venv\Scripts\python.exe -m frame_tools.cli check       # pre-cut validation - exits nonzero if something is wrong
+.\.venv\Scripts\python.exe -m frame_tools.cli fields      # measurement ids, current values, and TODO status
+.\.venv\Scripts\python.exe -m frame_tools.cli set <id> <value>  # write a measured value, then print checks
 .\.venv\Scripts\python.exe -m frame_tools.cli fusion      # resolved numbers as JSON, for the Fusion MCP
 .\.venv\Scripts\python.exe -m frame_tools.cli fusion -o   # ...written to fusion_scripts/frame_params.json instead
 .\.venv\Scripts\python.exe -m frame_tools.cli kerf-test   # write dxf/kerf_test.dxf, to measure your cutter's kerf
@@ -52,8 +54,8 @@ the Python module entry point is the reliable command form.
 
 ## Workflow
 
-1. Measure your salvaged parts -> fill in `docs/measurements.md`
-2. Copy those numbers into `params.yaml` and `components/loadout.yaml`
+1. Run `fields` to see the measurement ids and which values are still TODO guesses
+2. Measure a part, then run `set <id> <value>` so the data file and checklist update together
 3. Run the report command until every check passes
 4. Run `kerf-test`, cut the coupon, put the measured kerf back in `params.yaml`
 5. Run `fusion -o`, then run `frame_sync_params` in Fusion to load the parameters

@@ -1,14 +1,19 @@
 """Command line entry point.
 
-    frame report | geometry | mass | check | fusion | kerf-test
+    frame report | geometry | mass | check | fields | set | fusion | kerf-test
 """
 from __future__ import annotations
 
 import argparse
 import json
+import re
 import sys
 from pathlib import Path
+from typing import Any
 
+from fcc.errors import FccError
+from fcc.fields import FieldSpec, current_value, field_by_id, load_fields
+from fcc.writer import write_value
 from . import dxf_out, fusion, geometry, mass, params, thrust, validate
 
 BAR = "-" * 62
@@ -65,6 +70,11 @@ def cmd_mass(_args) -> int:
 def cmd_check(_args) -> int:
     p, lay, m, t = _build_all()
     checks = validate.run(p, lay, m, t)
+    fails, _ = _print_checks(checks)
+    return 1 if fails else 0
+
+
+def _print_checks(checks: list[validate.Check]) -> tuple[int, int]:
     print(BAR)
     print("PRE-CUT CHECKS")
     print(BAR)
@@ -78,13 +88,58 @@ def cmd_check(_args) -> int:
     print(f"  {len(checks) - fails - warns} passed, {warns} warnings, {fails} failures")
     if fails:
         print("  >> Do not cut yet. Fix the failures in params.yaml first.")
-    return 1 if fails else 0
+    return fails, warns
 
 
 def cmd_report(args) -> int:
     cmd_geometry(args); print()
     cmd_mass(args); print()
     return cmd_check(args)
+
+
+def cmd_fields(_args) -> int:
+    root = params.project_root()
+    fields = load_fields(root=root)
+    print(BAR)
+    print("MEASUREMENT FIELDS")
+    print(BAR)
+    for field in fields:
+        value = _display_value(current_value(field, root=root), field.unit)
+        status = "TODO guess" if _is_todo_guess(field, root) else "measured"
+        print(f"  {field.id:<26} {value:<14} [{status}]")
+        print(f"         {field.question}")
+    return 0
+
+
+def cmd_set(args) -> int:
+    root = params.project_root()
+    field = field_by_id(args.id, root=root)
+    value = _coerce_value(field, args.value)
+    range_warning = _range_warning(field, value)
+    result = write_value(field, value, root=root)
+
+    print(BAR)
+    print("FIELD WRITE")
+    print(BAR)
+    print(f"  field               {field.id}")
+    print(f"  value               {_display_value(value, field.unit)}")
+    print(f"  changed             {result.file}:{result.line_number}")
+    print(f"    - {result.old_text.rstrip()}")
+    print(f"    + {result.new_text.rstrip()}")
+    if field.measurement_label:
+        status = "ticked" if result.checklist_ticked else "already current"
+    else:
+        status = "no checklist"
+    print(f"  checklist           {status}")
+    if range_warning:
+        print(f"  [warn] {range_warning} Value saved anyway.")
+
+    print()
+    p, lay, m, t = _build_all()
+    fails, _ = _print_checks(validate.run(p, lay, m, t))
+    if fails:
+        print("  >> This design does not currently validate. The measurement was saved; fix the design next.")
+    return 0
 
 
 def cmd_fusion(args) -> int:
@@ -121,6 +176,72 @@ def cmd_kerf_test(args) -> int:
     return 0
 
 
+def _coerce_value(field: FieldSpec, value: str) -> int | float:
+    try:
+        if field.type == "int":
+            return int(value)
+        if field.type == "float":
+            return float(value)
+    except ValueError as exc:
+        raise ValueError(f"{field.id}: value {value!r} cannot be converted to {field.type}") from exc
+    raise ValueError(f"{field.id}: unsupported type {field.type!r}")
+
+
+def _display_value(value: Any, unit: str) -> str:
+    if isinstance(value, float):
+        text = f"{value:g}"
+    else:
+        text = str(value)
+    return f"{text} {unit}" if unit else text
+
+
+def _range_warning(field: FieldSpec, value: int | float) -> str | None:
+    if field.min <= value <= field.max:
+        return None
+    low = f"{field.min:g}"
+    high = f"{field.max:g}"
+    return f"{field.id} is outside the expected {low}..{high} {field.unit} range."
+
+
+def _is_todo_guess(field: FieldSpec, root: Path) -> bool:
+    if field.measurement_label:
+        return not _measurement_is_ticked(field, root)
+    line = _target_line(field, root)
+    return "# TODO" in line
+
+
+def _measurement_is_ticked(field: FieldSpec, root: Path) -> bool:
+    text = (root / "docs" / "measurements.md").read_text(encoding="utf-8")
+    label = re.escape(field.measurement_label or "")
+    pattern = re.compile(rf"- \[(?P<mark>[ xX])\] {label}:")
+    for line in text.splitlines():
+        match = pattern.search(line)
+        if match:
+            return match.group("mark").lower() == "x"
+    return False
+
+
+def _target_line(field: FieldSpec, root: Path) -> str:
+    text = (root / field.file).read_text(encoding="utf-8")
+    if field.file == "params.yaml":
+        section, key = field.key_path.split(".", 1)
+        current_section = ""
+        for line in text.splitlines():
+            stripped = line.strip()
+            if line and not line.startswith(" ") and stripped.endswith(":"):
+                current_section = stripped.removesuffix(":")
+                continue
+            if current_section == section and re.match(rf"\s+{re.escape(key)}:", line):
+                return line
+    if field.file == "components/loadout.yaml" and field.item and field.field:
+        name_pattern = re.compile(rf"\bname:\s*{re.escape(field.item)}(?=[,\s}}])")
+        field_pattern = re.compile(rf"\b{re.escape(field.field)}:")
+        for line in text.splitlines():
+            if name_pattern.search(line) and field_pattern.search(line):
+                return line
+    return ""
+
+
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(prog="frame", description=__doc__)
     sub = ap.add_subparsers(dest="cmd")
@@ -129,6 +250,7 @@ def main(argv: list[str] | None = None) -> int:
         ("geometry", cmd_geometry, "arm length and motor positions"),
         ("mass", cmd_mass, "mass budget and centre of gravity"),
         ("check", cmd_check, "pre-cut design validation"),
+        ("fields", cmd_fields, "measurement fields and current values"),
         ("fusion", cmd_fusion, "resolved parameters as JSON for Fusion"),
         ("kerf-test", cmd_kerf_test, "write dxf/kerf_test.dxf to calibrate your cutter"),
     ]:
@@ -142,10 +264,14 @@ def main(argv: list[str] | None = None) -> int:
         if name == "kerf-test":
             sp.add_argument("-o", "--out", metavar="PATH", default=None,
                             help="output path (default dxf/kerf_test.dxf)")
+    sp = sub.add_parser("set", help="write one measurement value and run checks")
+    sp.add_argument("id", help="field id from `frame fields`")
+    sp.add_argument("value", help="measured value")
+    sp.set_defaults(func=cmd_set)
     args = ap.parse_args(argv)
     try:
         return (args.func if args.cmd else cmd_report)(args)
-    except (FileNotFoundError, ImportError, KeyError, ValueError) as exc:
+    except (FccError, FileNotFoundError, ImportError, KeyError, ValueError) as exc:
         print(f"error: {exc}", file=sys.stderr)
         return 2
 

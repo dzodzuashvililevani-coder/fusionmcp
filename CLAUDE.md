@@ -36,6 +36,7 @@ with a finer-grained table.
 | `protocol____` | [docs/protocol/](docs/protocol/README.md) | Markdown | Plan-Gate-Verify roles, contracts, gates, trust boundaries |
 | `claude____` | [docs/claude/](docs/claude/README.md) | Markdown | Claude planner/verifier role docs |
 | `codex____` | [docs/codex/](docs/codex/README.md) | Markdown | Codex implementer inbox: plans, gates, error fixes |
+| `reports____` | [docs/reports/](docs/reports/README.md) | Markdown | Plain-language report per finished roadmap phase |
 | `measure____` | [docs/measurements.md](docs/measurements.md) | Markdown | Caliper checklist to fill in |
 | `buildlog____` | [docs/build-log.md](docs/build-log.md) | Markdown | What actually happened |
 | `fusion____` | [fusion_scripts/](fusion_scripts/README.md) | Python (in Fusion) | Scripts that run inside Fusion |
@@ -79,6 +80,8 @@ goes in a new `web/` folder with its own README.
 .\.venv\Scripts\python.exe -m frame_tools.cli geometry    # arm length, motor coordinates
 .\.venv\Scripts\python.exe -m frame_tools.cli mass        # mass budget and centre of gravity
 .\.venv\Scripts\python.exe -m frame_tools.cli check       # pre-cut validation, exits nonzero on failure
+.\.venv\Scripts\python.exe -m frame_tools.cli fields      # list measurement ids, current values, and TODO status
+.\.venv\Scripts\python.exe -m frame_tools.cli set <id> <value>  # write one measured value, then print checks
 .\.venv\Scripts\python.exe -m frame_tools.cli fusion      # resolved numbers as JSON on stdout
 .\.venv\Scripts\python.exe -m frame_tools.cli fusion -o   # ...written to fusion_scripts/frame_params.json instead
 .\.venv\Scripts\python.exe -m frame_tools.cli kerf-test   # write dxf/kerf_test.dxf to calibrate the cutter

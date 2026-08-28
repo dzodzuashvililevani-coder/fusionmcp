@@ -3,7 +3,7 @@
 **Plan:** claudePlan-data-spine-1.md
 **Created:** 2026-08-28
 **Source spec:** `docs/project/roadmap.md` Phase 1
-**Status:** phase-5-gate-complete-awaiting-verify
+**Status:** complete - all phases verified 2026-08-28
 
 > **This is the Phase 0 -> Phase 1 move.** It is the first implementation work of
 > the project proper. Read `docs/project/roadmap.md` section 0 before starting:
@@ -158,8 +158,13 @@ Every criterion is observable from outside the code.
     tagged `Python`.
 23. **Indexes updated.** `CLAUDE.md` gains a portal row for `src/fcc/` and the
     two new commands; `README.md` gains a folder row.
-24. **Import direction.** No module under `src/frame_tools/` imports `fcc`. A
-    test enforces it. This is what makes D10 real rather than aspirational.
+24. **Import direction.** *(Amended 2026-08-28, errorFix-3 section 3.5.)* No
+    module under `src/frame_tools/` **other than `cli.py`** imports `fcc`.
+    `cli.py` is the composition root and may import it; the domain core
+    (`params`, `geometry`, `mass`, `thrust`, `validate`, `fusion`, `dxf_out`)
+    may not. A test enforces the exemption **by name**, so a second module
+    cannot quietly join it. This is what makes D10 real rather than
+    aspirational. Until Phase 7 the stricter test stands unchanged.
 25. **Canonical commands clean.** Both commands in section 6 pass with zero
     failures and zero errors.
 
@@ -691,3 +696,378 @@ on that item's line and preserves the rest of the line.
   import `fcc`, but the Phase 7 CLI note says `src/frame_tools/cli.py` will
   import `fcc`. Phase 4 keeps the current import-boundary test strict; Phase 7
   should amend that rule before adding CLI imports.
+
+### Phase 6 sign-off (writer verification) - 2026-08-28
+
+**Verdict:** FAIL -> errorFix-3. **One defect, in criterion 4.** Criteria 5-14
+are confirmed met.
+
+**Evidence, run in Claude's environment:**
+
+```
+python -m pytest -q -p no:cacheprovider           -> 152 passed, 0 errors
+python -m frame_tools.cli report                  -> 10 passed, 0 warnings, 0 failures
+python -m pytest tests/test_privacy.py -q ...     -> 1 passed
+```
+
+Commit inspected: `40032ca` (base `146313d`). Working tree clean, not pushed.
+Diff: 5 files, +708/-4. Exactly the Phase 4 "Touches" list plus the two plan
+files. No scope drift, no deleted tests, no suppressed warnings, no dependency
+added. Files inspected: `src/fcc/writer.py`, `tests/test_writer.py`,
+`tests/test_boundaries.py`, `src/fcc/fields.py`, `src/fcc/errors.py`,
+`src/fcc/README.md`, `fields.yaml`, the gate report.
+
+**Sweep of all 21 fields** through `write_value` against `shutil.copy2` copies of
+the real project files -- every field addressed the correct line, wrote the
+correct value, round-tripped through `yaml.safe_load`, preserved the file's `#`
+count, and ticked the correct checklist box. Both lines carrying two checkboxes
+(`Body width` / `Mount ear spacing`, `Receiver mass` / `Antenna mass and
+length`) accept sequential writes to each box independently without disturbing
+the other. **Criterion 11 is achieved surgically, as claimed.**
+
+| # | Criterion | Result |
+|---|---|---|
+| 4 | Byte-exact writes | **FAIL** -- 67 of 68 lines of `params.yaml` change bytes; 66 of 70 in `docs/measurements.md` |
+| 5 | Keys and comments survive | **PASS** |
+| 6 | Comment count invariant | **PASS** -- all 21 fields |
+| 7 | Refusal over reformat | **PASS** -- named error, no `yaml.dump` in source, test greps for it |
+| 8 | Atomic and validated | **PASS** -- same-dir `mkstemp`, re-parse, `os.replace`, tmp unlinked on failure |
+| 9 | Round trip | **PASS** |
+| 10 | Inline lists | **PASS** -- index 1 of 3 changes alone, spacing preserved |
+| 11 | Flow maps | **PASS** -- surgical, no reformat, no refusal needed |
+| 12 | Ticks the box | **PASS** -- all 21, including both shared lines |
+| 13 | Missing label is an error | **PASS** -- raises before any data write |
+| 14 | Idempotent | **PASS** |
+| 15 | Path containment | **PASS** |
+| 16 | No shell | **PASS** |
+
+**The defect:** `_read_target` reads with `Path.read_text()` (universal newlines,
+CRLF collapses to LF) while `_atomic_write` writes with `newline=""` (no
+translation). The working tree is deliberately mixed -- `params.yaml` is 67 CRLF
+lines, `loadout.yaml` is 16 LF lines, `docs/measurements.md` is 66 CRLF plus 3
+bare LF. Writing one value flattens `params.yaml` and `docs/measurements.md`
+entirely to LF. One line changes in meaning; every line changes in bytes.
+
+**Why nothing caught it, including me on a first read.** `tests/test_writer.py`
+copies the fixture with `read_text`/`write_text` and compares with a `read()`
+helper that also uses `read_text`, so both sides are normalised before any
+assertion sees them. `core.autocrlf` is `true`, so `git diff --stat` reports
+`1 file changed, 1 insertion(+), 1 deletion(-)` and the gate report's evidence
+was truthful while the property was false. This only surfaced under
+`shutil.copy2` plus `read_bytes()`. The plan said to write the byte-exactness
+test first and let it drive the design; what exists is a normalised-text test,
+and it is the one place a stricter test was worth more than more code.
+
+**Notes:** The writer itself is well built -- the refusal paths are real, the
+checklist edit is computed before the data write so a bad label cannot leave a
+half-applied update, and the two-checkboxes-per-line case was handled without
+being asked for. The fix is one line in `_read_target` plus tests that compare
+bytes. Do not rewrite the parser.
+
+**Your open question is answered in errorFix-3 section 3.5.** You were right
+that criterion 24 contradicts the Phase 7 CLI note; the error is mine.
+Criterion 24 is amended to exempt `cli.py` as the composition root. Leave the
+current boundary test untouched until Phase 7.
+
+**Phase 7 remains gated** on errorFix-3.
+
+### Phase 6 sign-off (errorFix-3 re-verification) - 2026-08-28
+
+**Verdict:** **PASS.** Criterion 4 is now genuinely met. Phase 4 is complete and
+verified. **Phase 7 is open.**
+
+**Canonical commands, run in Claude's environment:**
+
+```
+python -m pytest -q -p no:cacheprovider           -> 155 passed, 0 errors
+python -m frame_tools.cli report                  -> 10 passed, 0 warnings, 0 failures
+python -m pytest tests/test_privacy.py -q ...     -> 1 passed
+```
+
+**errorFix-3 acceptance criteria, measured:**
+
+| # | Criterion | Result |
+|---|---|---|
+| 1 | New test fails before the fix, passes after | **PASS** -- reproduced independently, see below |
+| 2 | One line's bytes change in `params.yaml`, CRLF count held | **PASS** -- 1 of 68 lines; CRLF 67 -> 67 |
+| 3 | Same for `docs/measurements.md`, bare-LF lines intact | **PASS** -- 1 of 70 lines; CRLF 66 -> 66, bare LF 3 -> 3 |
+| 4 | `components/loadout.yaml` stays pure LF, no CR introduced | **PASS** -- CRLF 0 -> 0 |
+| 5 | CRLF / LF / mixed synthetic fixtures round-trip | **PASS** |
+| 6 | `writer____` portal row present | **PASS** |
+| 7 | Canonical commands clean, flag-free | **PASS** |
+| 8 | `test_privacy.py` passes | **PASS** |
+| 9 | Only the four in-scope files touched | **PASS** -- `README.md`, `writer.py`, `test_writer.py`, this plan file. No tracked data file rewritten. |
+
+**Injection proof, run by me rather than taken on report.** I reverted
+`_read_target` to `read_text()` in place and re-ran `tests/test_writer.py`:
+
+```
+6 failed, 8 passed
+  test_scalar_write_changes_one_line_and_preserves_comment
+  test_inline_list_write_changes_only_target_section_element
+  test_preview_returns_diff_without_writing
+  test_tick_measurement_handles_second_checkbox_on_same_line
+  test_params_write_preserves_per_line_terminators_in_synthetic_files[crlf-...]
+  test_params_write_preserves_per_line_terminators_in_synthetic_files[mixed-...]
+```
+
+Then restored the fix and re-ran: 14 passed. **The `lf` parameter case correctly
+stayed green while `crlf` and `mixed` failed** -- the test is asserting
+terminator *preservation*, not the presence of CRLF, which is the distinction
+that makes it durable if these files ever convert to LF.
+
+**Independent end-to-end byte proof.** Byte-exact `shutil.copy2` copies of the
+real project files, one value written through `write_value`:
+
+```
+WriteResult(file='params.yaml', line_number=11,
+            old_text='  thickness_mm: 3.0          # TODO measure with caliper
+',
+            new_text='  thickness_mm: 2.7          # TODO measure with caliper
+')
+
+params.yaml:             1 of 68 lines differ in BYTES  | CRLF 67 -> 67, bare LF 0 -> 0
+docs/measurements.md:    1 of 70 lines differ in BYTES  | CRLF 66 -> 66, bare LF 3 -> 3
+components/loadout.yaml: UNCHANGED (bytes identical)
+```
+
+Compare with the same script before the fix: 67 of 68 and 66 of 70. The
+`WriteResult` now carries the real terminator, which is a nice secondary
+confirmation that the string never lost it.
+
+**Full sweep, byte level.** All 21 fields written to fresh byte-exact copies:
+every one changed exactly one line of its data file and exactly one line of
+`docs/measurements.md`, preserved that file's CRLF count, bare-LF count, and `#`
+count, and round-tripped through `yaml.safe_load` with the correct value. **0
+problems across 21 fields.**
+
+**Scope:** exactly the four files errorFix-3 named. The fix is the one line it
+should be -- `writer.py` is +2/-1. No parser change, no `.gitattributes`, no
+repo-wide normalisation, no Phase 7 work pulled forward. The temptations listed
+in errorFix-3 section 5 were all declined.
+
+**Plan amended.** Criterion 24 in section 4 now carries the `cli.py` exemption
+from errorFix-3 section 3.5, so Phase 7 starts from a plan that does not
+contradict itself. `test_frame_tools_do_not_import_fcc_before_cli_phase` is
+correctly still the strict version; renaming it and adding the by-name exemption
+is Phase 7 work.
+
+**Phase 4 acceptance criteria 4-16 are met and verified.** Criteria 17-21 belong
+to Phase 7 and remain open by design.
+
+**Notes:** Three of the four rounds on this plan came back FAIL, and in two of
+them the code was right and the test was the problem. That is the pattern worth
+naming: this project's failure mode is not bad implementation, it is tests that
+cannot fail. Both times the fix was to make the test observe what the criterion
+actually claims -- real `TODO` markers rather than a hardcoded set, real bytes
+rather than normalised text. Phase 7's criteria 17-21 are CLI behaviour, which
+is easy to assert loosely; write those tests against real invocations and real
+exit codes.
+
+**Phase 7 (CLI and indexes) is now open.** Start from
+`claudePlan-data-spine-1.md` section 5, Phase 7, with the amended criterion 24.
+
+### Phase 8 gate report - 2026-08-28
+
+## Commit SHA
+
+Base before Phase 7 implementation: `40032ca`.
+
+Phase 7 started with the verified, uncommitted errorFix-3 changes still in the
+working tree. This gate report therefore covers the full current working tree,
+while calling out the Phase 7 additions separately below.
+
+## Files changed
+
+```text
+M  CLAUDE.md
+M  README.md
+M  docs/codex/claudePlan-data-spine-1.md
+M  src/fcc/README.md
+M  src/fcc/writer.py
+M  src/frame_tools/cli.py
+M  tests/test_boundaries.py
+M  tests/test_writer.py
+?? docs/codex/claudePlan-data-spine-1-errorFix-3.md
+```
+
+Phase 7 added behavior in `src/frame_tools/cli.py`, extended
+`tests/test_boundaries.py`, and updated the command/index documentation in
+`CLAUDE.md`, `README.md`, and `src/fcc/README.md`. `src/fcc/writer.py` and
+`tests/test_writer.py` are the already verified errorFix-3 changes.
+
+## Test command output
+
+```powershell
+.\.venv\Scripts\python.exe -m pytest tests\test_boundaries.py tests\test_writer.py -q -p no:cacheprovider
+26 passed in 3.78s
+
+.\.venv\Scripts\python.exe -m pytest -q -p no:cacheprovider
+159 passed in 6.56s
+
+.\.venv\Scripts\python.exe -m frame_tools.cli report
+10 passed, 0 warnings, 0 failures
+
+.\.venv\Scripts\python.exe -m frame_tools.cli fields
+exits 0 and prints all 21 field ids, current values, questions, and TODO status
+
+.\.venv\Scripts\python.exe -m pytest tests\test_privacy.py -q -p no:cacheprovider
+1 passed in 0.18s
+
+git diff --check
+no whitespace errors; only core.autocrlf working-copy warnings
+```
+
+## Self-assessment
+
+Phase 7 is implemented as scoped. `frame fields` lists all field ids with their
+current value, question, and whether the value is still a TODO guess. `frame set
+<id> <value>` writes through the surgical writer, reports the changed
+`file:line`, reports checklist status, warns but still saves out-of-range
+values, and then prints the same pre-cut check summary used by `frame check`.
+
+The CLI tests use real subprocess invocations: they copy a temporary mini
+project, run `python -m frame_tools.cli ...` against that copy, assert real exit
+codes, and byte-check the written project files. The failing-design case sets
+`stock_thickness` to `0.5`, confirms exit code 0, confirms the value and
+checklist were saved, and confirms the failing check name and detail are printed
+from `validate.py`.
+
+Criterion 24 is now enforced with the Phase 7 exemption: `cli.py` may import
+`fcc`; every other module under `src/frame_tools/` is still forbidden from doing
+so by name.
+
+No real tracked data file changed during this phase:
+
+```powershell
+git diff -- params.yaml docs/measurements.md components/loadout.yaml
+no output
+```
+
+## Open questions
+
+- Phase 9 verification is owed by Claude before the data spine is complete.
+- The current tree still contains uncommitted, verified errorFix-3 files from
+  the previous round. Commit grouping is left to the user.
+
+### Phase 9 sign-off (full spine verification) - 2026-08-28
+
+**Verdict:** **PASS.** Criteria 17-21 are met. **The data spine is complete.**
+All 25 acceptance criteria are now verified. Nothing in this plan remains open.
+
+**Canonical commands, run in Claude's environment:**
+
+```
+python -m pytest -q -p no:cacheprovider           -> 159 passed, 0 errors
+python -m frame_tools.cli report                  -> 10 passed, 0 warnings, 0 failures
+python -m pytest tests/test_privacy.py -q ...     -> 1 passed
+```
+
+**Criteria 17-21, exercised as real subprocesses against a full byte-exact copy
+of the project (not through the test suite):**
+
+| # | Criterion | Result |
+|---|---|---|
+| 17 | `frame fields` lists id, question, value, TODO status; exits 0 | **PASS** -- all 21 fields |
+| 18 | `frame set` writes, ticks, prints the change and the check summary | **PASS** |
+| 19 | Failing values still save, exit 0, check name + detail verbatim | **PASS** -- see below |
+| 20 | Unknown id exits non-zero listing valid ids | **PASS** -- exit 2, all 21 ids named |
+| 21 | Out-of-range written and flagged, not rejected | **PASS** |
+
+**Criterion 4 still holds through the CLI** -- the end-to-end byte diff the plan
+asks for in Phase 9:
+
+```
+frame set stock_thickness 2.85        -> exit 0
+
+params.yaml:             1 of 67 lines differ -> [11]
+                         CRLF 67->67, LF 67->67, '#' 39->39
+  -   thickness_mm: 3.0          # TODO measure with caliper
+  +   thickness_mm: 2.85          # TODO measure with caliper
+
+docs/measurements.md:    1 of 69 lines differ -> [45]
+                         CRLF 66->66, LF 69->69, '#' 21->21
+  - - [ ] Actual thickness (measure, do not trust the label): ____ mm
+  + - [x] Actual thickness (measure, do not trust the label): 2.85 mm
+
+components/loadout.yaml: UNCHANGED
+```
+
+**Criterion 19 in full, live:**
+
+```
+frame set stock_thickness 0.5         -> exit 0
+  [warn] stock_thickness is outside the expected 1..8 mm range. Value saved anyway.
+  [FAIL] stock thickness
+         0.5mm - thin plywood arms flex and cause gyro noise; 3mm+ recommended
+  9 passed, 0 warnings, 1 failures
+  >> This design does not currently validate. The measurement was saved; fix the design next.
+```
+
+Value and checklist tick both persisted. This is the behaviour the criterion was
+written for: the measurement is a fact and it lands, the design being wrong is a
+separate sentence.
+
+**Also checked live, beyond the criteria:** a loadout-file write
+(`vtx_mass 4.4` -> `loadout.yaml:12`, one token, flow map intact), a
+non-numeric value (exit 2, named error), an idempotent repeat
+(`checklist  already current`), and a `fields` re-run after a write showing
+`stock_thickness  2.85 mm  [measured]`.
+
+**Scope:** `cli.py`, `tests/test_boundaries.py`, `CLAUDE.md`, `README.md`,
+`src/fcc/README.md` -- exactly the Phase 7 "Touches" list. `git diff` on
+`params.yaml`, `components/loadout.yaml`, `docs/measurements.md`, and
+`fields.yaml` is empty: no tracked data file was changed by this work, which was
+section 2's hard line. `_print_checks` was extracted from `cmd_check` rather
+than duplicated, and the new CLI tests run real `subprocess` invocations against
+byte-copied projects and assert real exit codes -- which is what I asked for at
+the end of the Phase 6 sign-off.
+
+**Criterion 24 as amended is correctly enforced.**
+`test_only_cli_imports_fcc_from_frame_tools` exempts `cli.py` by name and also
+asserts `cli.py` *does* import `fcc`, so the exemption cannot silently become
+dead. That is stronger than the amendment required.
+
+### Known limitation, recorded not fixed -- my gap, not Codex's
+
+Five of the 21 fields have no `measurement_label`, because
+`docs/measurements.md` has no checklist line for battery L/W/H or centre-plate
+size: `center_plate_width`, `center_plate_length`, `battery_length`,
+`battery_width`, `battery_height`. For those, `frame fields` falls back to
+reading the `# TODO` comment on the params line -- and the writer never removes
+`TODO` markers, correctly, because criterion 5 forbids it. **So those five
+report `[TODO guess]` forever, even once measured:**
+
+```
+frame set battery_width 34.0          -> writes params.yaml:43 correctly
+frame fields                          -> battery_width  34 mm  [TODO guess]
+```
+
+The value is right, the write is surgical, the checks re-run. Only the status
+column is dead, for 5 of 21 fields.
+
+This is a gap in the field spec I signed off in Phase 3, not a Phase 7
+implementation defect -- there is no in-scope fix, since both alternatives
+(stripping `TODO` markers, or adding a measured-state store) are explicitly out
+of this plan. **No error-fix is warranted.** The clean resolution, for whoever
+plans the next phase: add checklist lines to `docs/measurements.md` for battery
+dimensions and centre-plate size, and give those five fields labels. That also
+gives the physical build somewhere to write those numbers down, which it
+currently lacks.
+
+**Two cosmetic notes, neither worth changing now:** a new value of a different
+character width shifts the trailing comment's column
+(`thickness_mm: 2.85          # TODO`) -- the comment text is untouched, so
+criterion 5 holds, but the file's alignment drifts as measurements land. And an
+idempotent repeat still prints `changed  params.yaml:11` above two identical
+`-`/`+` lines; `checklist  already current` is the line carrying the truth.
+
+**Plan closed.** Nothing was recorded in
+`docs/knowledge/capture-candidates.md`: that contract takes finished *products*
+whose build has happened, and no frame has been cut. The first entries still
+arrive after the first physical build, as that file says.
+
+**What the next plan starts from:** a working `frame fields` / `frame set` loop
+against the real files, `fields.yaml` as the spec, and `src/fcc/` holding the
+domain-blind half. Roadmap Phase 2 (the HTTP layer) is unblocked; so is simply
+picking up the calipers, which was the point.
