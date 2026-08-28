@@ -21,6 +21,7 @@ SKIP_PREFIXES = (".pytest-work-tmp",)
 DATA_TYPES = {
     "YAML", "Python", "Python (in Fusion)", "Markdown", "JSON",
     "Vector", "Binary CAD", "Raster",
+    "TypeScript", "CSS", "HTML",
 }
 
 

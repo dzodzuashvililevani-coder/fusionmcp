@@ -37,6 +37,7 @@ with a finer-grained table.
 | `claude____` | [docs/claude/](docs/claude/README.md) | Markdown | Claude planner/verifier role docs |
 | `codex____` | [docs/codex/](docs/codex/README.md) | Markdown | Codex implementer inbox: plans, gates, error fixes |
 | `reports____` | [docs/reports/](docs/reports/README.md) | Markdown | Plain-language report per finished roadmap phase |
+| `design____` | [docs/design/](docs/design/README.md) | Markdown | Visual specs and mockups. Normative for anything a human looks at |
 | `measure____` | [docs/measurements.md](docs/measurements.md) | Markdown | Caliper checklist to fill in |
 | `buildlog____` | [docs/build-log.md](docs/build-log.md) | Markdown | What actually happened |
 | `fusion____` | [fusion_scripts/](fusion_scripts/README.md) | Python (in Fusion) | Scripts that run inside Fusion |
@@ -66,10 +67,15 @@ Used in every folder's portal table, so the type is always unambiguous.
 | **PowerShell** | `.ps1` | yes | Windows helper scripts |
 | **Vector** | `.dxf`, `.svg` | text, but do not hand-edit | Generated cut geometry |
 | **Binary CAD** | `.f3d`, `.step`, `.stl` | **no** | Git stores whole copies. Commit milestones only |
+| **TypeScript** | `.ts`, `.tsx` | yes | Browser code. Types for the API are generated, never hand-written |
+| **CSS** | `.css` | yes | Styles. Every colour comes from a token in the design spec |
+| **HTML** | `.html` | yes | Page shells and design mockups |
 | **Raster** | `.jpg`, `.png` | **no** | Photos and web references. Downscale before committing |
 
-There is no JavaScript in this project. If a browser tool ever gets added it
-goes in a new `web/` folder with its own README.
+Browser code lives in `web/` and nowhere else. It is TypeScript, never plain
+JavaScript, and the API types in `web/src/api.d.ts` are generated from the
+server's schema rather than written by hand -- see
+[docs/project/architecture.md](docs/project/architecture.md) D9.
 
 ---
 

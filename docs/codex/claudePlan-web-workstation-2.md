@@ -5,8 +5,11 @@
 **Source spec:** `docs/project/roadmap.md` Phase 2; `docs/brainstorming/idea-web-workstation.md`
 **Supersedes:** `claudePlan-web-workstation-1.md` — written 2026-08-27, status
 `ready-for-revision`, never implemented. See section 0.1.
-**Visual spec:** https://claude.ai/code/artifact/b3cf5d12-bae1-4dbf-b289-597e83115822
-**Status:** phase-3-verified-phase-4-open
+**Visual spec:** [`docs/design/workstation-visual-spec.md`](../design/workstation-visual-spec.md)
+(normative), with [`workstation-mockup.html`](../design/workstation-mockup.html) as the
+reference rendering. *Amended 2026-08-28 — this line was a private artifact URL
+the implementer could not open. See the Phase 4 blocker note in section 9.*
+**Status:** phase-4-open (visual spec moved into the repo 2026-08-28)
 
 > **This is roadmap Phase 2.** Phase 1 (the data spine) is complete and verified:
 > `fcc.fields` loads the spec, `fcc.writer` performs surgical writes, and
@@ -25,7 +28,7 @@ Confirm all five before Phase 1. If any fails, stop and report.
 | P0.2 | Working tree committed | `git status --short` is empty |
 | P0.3 | Phase 1 signed off | `claudePlan-data-spine-1.md` status is `complete - all phases verified` |
 | P0.4 | Node toolchain present | `node --version` and `npm --version` both succeed |
-| P0.5 | Visual spec read | Open the artifact linked above before Phase 4 |
+| P0.5 | Visual spec read | Read `docs/design/workstation-visual-spec.md`; open the mockup in a browser |
 
 P0.4 was checked on 2026-08-28: **Node v24.16.0, npm 11.13.0**. `pnpm` is not
 installed. See decision W3.
@@ -332,9 +335,12 @@ Every criterion is observable from outside the code.
     `.tsx`, or `.css` file under `web/src/`, **including the generated
     `api.d.ts`** — no exclusions. Roadmap exit criterion 3.
 23. **The three panes match the visual spec**: field queue, current measurement,
-    design state. Palette, type scale, spacing, and component states as
-    published. Deviations are allowed but must be listed in the gate report with
-    a reason.
+    design state. Colour tokens, type scale, spacing, layout, and component
+    states exactly as tabulated in
+    [`docs/design/workstation-visual-spec.md`](../design/workstation-visual-spec.md).
+    Deviations are allowed but must be listed in the gate report with a reason.
+    Section 6 of that file lists what the mockup does that the app must **not** —
+    read it before copying anything.
 24. **Both themes render correctly**, following the token pattern in the spec:
     a complete light palette on bare `:root`, tokens redefined under
     `@media (prefers-color-scheme: dark)` guarded by
@@ -365,11 +371,12 @@ Every criterion is observable from outside the code.
 
 31. **`web/README.md` and `web/src/README.md` and `src/fcc/api/README.md`** each
     have a `**Purpose:**` line and a `## Portals` table.
-32. **The data-type vocabulary gains `TypeScript` and `CSS`** in both
-    `CLAUDE.md`'s table and `tests/test_structure.py`'s `DATA_TYPES` set, and
-    CLAUDE.md's line *"There is no JavaScript in this project"* is replaced with
-    what is now true. Without this, every new README fails
-    `test_readme_uses_known_data_types`.
+32. **The data-type vocabulary** — **already done, 2026-08-28. Nothing to do.**
+    `TypeScript`, `CSS`, and `HTML` are in both `CLAUDE.md`'s table and
+    `tests/test_structure.py`'s `DATA_TYPES`, and the *"There is no JavaScript in
+    this project"* line is replaced. Discharged early because `docs/design/`
+    needed the `HTML` entry. Do not remove them; `web/`'s READMEs depend on
+    them.
 33. **`.gitignore` covers `node_modules/` and `web/dist/`.** `node_modules` is
     already skipped by `test_structure.py` but is **not** gitignored today.
 34. **Indexes updated:** `CLAUDE.md` gains portal rows for `web/` and
@@ -1027,3 +1034,35 @@ red-before/green-after discipline was followed and reported.
 **Phase 4 (the React workstation) is now open.** Start from
 `claudePlan-web-workstation-2.md` section 6, Phase 4, and read the visual spec
 first. Every npm command in this plan now reads `npm.cmd`.
+
+### Phase 4 blocker resolved - 2026-08-28
+
+**Reported by Codex:** the visual spec could not be read. The plan pointed at
+`https://claude.ai/code/artifact/...`, which returns only the artifact shell to
+anyone who is not the signed-in owner; the embedded frame host is not fetchable
+at all. Codex correctly refused to guess the design from the text summary and
+halted rather than inventing it.
+
+**My error, and the right call by the implementer.** A plan made a private URL
+normative. `docs/protocol/trust-boundaries.md` already says *"keep durable state
+in repo files, not chat"*, and a link only one party can open is the same
+mistake in a different costume. An acceptance criterion that points at something
+the implementer cannot read is not a criterion.
+
+**Resolution — the spec now lives in the repository:**
+
+- `docs/design/workstation-visual-spec.md` — **normative.** Every colour token
+  with its hex value in both themes, the type scale, the layout with
+  breakpoints, every component state, and a table of what the mockup does that
+  the app must not. This is what criterion 23 is measured against.
+- `docs/design/workstation-mockup.html` — the reference rendering, self-contained
+  and openable in a browser, carrying all 21 real fields.
+- `docs/design/README.md` — the folder's rules, including *"a spec lives in the
+  repository, not behind a link."*
+
+Criterion 23 now points at the file. Criterion 32 is discharged early: the
+`HTML` data type was needed for the mockup, so `TypeScript`, `CSS`, and `HTML`
+all went into `CLAUDE.md` and `tests/test_structure.py` in the same change.
+215 tests pass.
+
+**Phase 4 is unblocked.** Nothing else about the plan changes.

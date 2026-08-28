@@ -1,0 +1,783 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!--
+  Design mockup for roadmap Phase 2, the measurement workstation.
+  NORMATIVE SPEC: docs/design/workstation-visual-spec.md - read that first.
+  This file is a reference rendering. Open it in a browser; it is self-contained
+  apart from the Google Fonts link, which the shipped app must NOT use (see
+  criterion 26). Static data, no server. Do not copy this markup into React.
+-->
+<title>Measurement Workstation</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+
+<style>
+  :root {
+    --ground:   #E8EAE6;
+    --shell:    #FBFBF9;
+    --panel:    #F3F5F1;
+    --sunken:   #E1E4DE;
+    --ink:      #191B1A;
+    --muted:    #5C6360;
+    --faint:    #878E8A;
+    --rule:     #D2D6CF;
+    --rule-firm:#B7BDB6;
+    --accent:   #2D4B8E;
+    --accent-ink:#FFFFFF;
+    --accent-soft:#DFE7F4;
+    --ok:       #3E6B4A;
+    --ok-soft:  #DDE9DE;
+    --warn:     #8A6113;
+    --warn-soft:#F1E6CC;
+    --fail:     #A33B2E;
+    --fail-soft:#F3DEDA;
+
+    --f-ui:   "Archivo", "Helvetica Neue", Arial, sans-serif;
+    --f-mono: "IBM Plex Mono", "SFMono-Regular", Consolas, monospace;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ground:   #0E100F;
+      --shell:    #171A19;
+      --panel:    #1B1F1D;
+      --sunken:   #101312;
+      --ink:      #E7EAE5;
+      --muted:    #9AA29D;
+      --faint:    #757C78;
+      --rule:     #282D2B;
+      --rule-firm:#3A413D;
+      --accent:   #7CA1E4;
+      --accent-ink:#0E1521;
+      --accent-soft:#1B2536;
+      --ok:       #72A87F;
+      --ok-soft:  #17251A;
+      --warn:     #C79A46;
+      --warn-soft:#2A2214;
+      --fail:     #D9776A;
+      --fail-soft:#2C1917;
+    }
+  }
+  :root[data-theme="dark"] {
+    --ground:   #0E100F;
+    --shell:    #171A19;
+    --panel:    #1B1F1D;
+    --sunken:   #101312;
+    --ink:      #E7EAE5;
+    --muted:    #9AA29D;
+    --faint:    #757C78;
+    --rule:     #282D2B;
+    --rule-firm:#3A413D;
+    --accent:   #7CA1E4;
+    --accent-ink:#0E1521;
+    --accent-soft:#1B2536;
+    --ok:       #72A87F;
+    --ok-soft:  #17251A;
+    --warn:     #C79A46;
+    --warn-soft:#2A2214;
+    --fail:     #D9776A;
+    --fail-soft:#2C1917;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--ground);
+    color: var(--ink);
+    font-family: var(--f-ui);
+    font-size: 15px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .mockbar {
+    background: var(--accent);
+    color: var(--accent-ink);
+    font-family: var(--f-mono);
+    font-size: 11.5px;
+    letter-spacing: 0.04em;
+    padding: 7px 20px;
+    display: flex;
+    gap: 16px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+  .mockbar strong { letter-spacing: 0.12em; text-transform: uppercase; font-size: 10px; }
+  .mockbar .sw { margin-left: auto; display: flex; align-items: center; gap: 8px; }
+  .mockbar select {
+    font-family: var(--f-mono);
+    font-size: 11.5px;
+    background: rgba(255,255,255,0.14);
+    color: inherit;
+    border: 1px solid currentColor;
+    padding: 2px 6px;
+    border-radius: 2px;
+  }
+  .mockbar select option { color: #191B1A; background: #FBFBF9; }
+
+  .app {
+    max-width: 1560px;
+    margin: 0 auto;
+    padding: 22px 20px 60px;
+  }
+
+  /* ---------- top bar ---------- */
+
+  .topbar {
+    display: flex;
+    align-items: center;
+    gap: 22px;
+    flex-wrap: wrap;
+    padding: 0 0 16px;
+    border-bottom: 1px solid var(--rule-firm);
+    margin-bottom: 20px;
+  }
+  .brand { display: flex; align-items: baseline; gap: 10px; }
+  .brand h1 {
+    font-size: 1.16rem;
+    font-weight: 700;
+    letter-spacing: -0.015em;
+    margin: 0;
+  }
+  .brand span {
+    font-family: var(--f-mono);
+    font-size: 10.5px;
+    letter-spacing: 0.13em;
+    text-transform: uppercase;
+    color: var(--faint);
+  }
+  .progress { margin-left: auto; display: flex; align-items: center; gap: 12px; }
+  .progress .txt {
+    font-family: var(--f-mono);
+    font-size: 12px;
+    color: var(--muted);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+  .bar { width: 150px; height: 5px; background: var(--sunken); overflow: hidden; }
+  .bar i { display: block; height: 100%; background: var(--accent); width: 0%; transition: width .25s ease; }
+
+  /* ---------- panes ---------- */
+
+  .panes {
+    display: grid;
+    grid-template-columns: 268px minmax(0, 1fr) 350px;
+    gap: 20px;
+    align-items: start;
+  }
+
+  .pane {
+    background: var(--shell);
+    border: 1px solid var(--rule);
+  }
+  .pane > header {
+    padding: 11px 15px;
+    border-bottom: 1px solid var(--rule);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .pane > header h2 {
+    font-family: var(--f-mono);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--faint);
+    margin: 0;
+  }
+  .pane > header .hint {
+    margin-left: auto;
+    font-family: var(--f-mono);
+    font-size: 10px;
+    color: var(--faint);
+  }
+
+  /* ---------- queue ---------- */
+
+  .queue { max-height: 78vh; overflow-y: auto; }
+  .qgroup {
+    font-family: var(--f-mono);
+    font-size: 9.5px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--faint);
+    padding: 13px 15px 5px;
+  }
+  .qitem {
+    display: grid;
+    grid-template-columns: 8px 1fr auto;
+    gap: 9px;
+    align-items: center;
+    width: 100%;
+    text-align: left;
+    background: none;
+    border: 0;
+    border-left: 2px solid transparent;
+    padding: 7px 15px 7px 13px;
+    font: inherit;
+    color: var(--ink);
+    cursor: pointer;
+  }
+  .qitem:hover { background: var(--panel); }
+  .qitem[aria-current="true"] {
+    background: var(--accent-soft);
+    border-left-color: var(--accent);
+  }
+  .qitem:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+  .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--rule-firm); }
+  .qitem.done .dot { background: var(--ok); }
+  .qname { font-family: var(--f-mono); font-size: 11.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .qval {
+    font-family: var(--f-mono);
+    font-size: 11px;
+    color: var(--muted);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+  .qitem.done .qval { color: var(--ok); font-weight: 600; }
+
+  /* ---------- field card ---------- */
+
+  .card { padding: 22px 26px 26px; }
+  .target {
+    font-family: var(--f-mono);
+    font-size: 11px;
+    color: var(--accent);
+    margin: 0 0 14px;
+  }
+  .target .lbl { color: var(--faint); }
+  .question {
+    font-size: 1.62rem;
+    font-weight: 600;
+    letter-spacing: -0.018em;
+    line-height: 1.2;
+    margin: 0 0 6px;
+    text-wrap: balance;
+    max-width: 22ch;
+  }
+  .fid {
+    font-family: var(--f-mono);
+    font-size: 11.5px;
+    color: var(--faint);
+    margin: 0 0 22px;
+  }
+
+  .entry { display: flex; align-items: flex-end; gap: 16px; flex-wrap: wrap; margin-bottom: 8px; }
+  .inputwrap { display: flex; align-items: baseline; gap: 8px; border-bottom: 2px solid var(--rule-firm); padding-bottom: 4px; }
+  .inputwrap:focus-within { border-bottom-color: var(--accent); }
+  .inputwrap input {
+    font-family: var(--f-mono);
+    font-size: 2.1rem;
+    font-weight: 500;
+    width: 6.5ch;
+    background: none;
+    border: 0;
+    color: var(--ink);
+    padding: 0;
+    font-variant-numeric: tabular-nums;
+  }
+  .inputwrap input:focus { outline: none; }
+  .inputwrap .unit { font-family: var(--f-mono); font-size: 1.05rem; color: var(--muted); }
+  .range { font-family: var(--f-mono); font-size: 11.5px; color: var(--faint); padding-bottom: 8px; }
+
+  .rangewarn {
+    display: none;
+    align-items: baseline;
+    gap: 8px;
+    background: var(--warn-soft);
+    border-left: 3px solid var(--warn);
+    padding: 9px 12px;
+    margin: 6px 0 0;
+    font-size: 13px;
+  }
+  .rangewarn.on { display: flex; }
+  .rangewarn b { font-family: var(--f-mono); font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--warn); }
+
+  .willchange { margin-top: 26px; }
+  .wc-head {
+    font-family: var(--f-mono);
+    font-size: 10px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--faint);
+    margin-bottom: 8px;
+  }
+  pre.diff {
+    font-family: var(--f-mono);
+    font-size: 12px;
+    line-height: 1.65;
+    background: var(--sunken);
+    padding: 12px 14px;
+    margin: 0 0 12px;
+    overflow-x: auto;
+    border-left: 3px solid var(--rule-firm);
+  }
+  pre.diff .del { color: var(--fail); }
+  pre.diff .add { color: var(--ok); }
+  pre.diff .keep { color: var(--faint); }
+
+  .actions { display: flex; gap: 12px; align-items: center; margin-top: 22px; flex-wrap: wrap; }
+  button.primary {
+    font: inherit;
+    font-weight: 600;
+    font-size: 14px;
+    background: var(--accent);
+    color: var(--accent-ink);
+    border: 0;
+    padding: 10px 22px;
+    cursor: pointer;
+  }
+  button.primary:hover { filter: brightness(1.1); }
+  button.ghost {
+    font: inherit;
+    font-size: 14px;
+    background: none;
+    color: var(--muted);
+    border: 1px solid var(--rule-firm);
+    padding: 9px 16px;
+    cursor: pointer;
+  }
+  button.ghost:hover { color: var(--ink); border-color: var(--ink); }
+  button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .kbd {
+    font-family: var(--f-mono);
+    font-size: 10.5px;
+    color: var(--faint);
+  }
+
+  .saved {
+    display: none;
+    margin-top: 20px;
+    background: var(--ok-soft);
+    border-left: 3px solid var(--ok);
+    padding: 12px 14px;
+    font-size: 13px;
+  }
+  .saved.on { display: block; }
+  .saved b { font-family: var(--f-mono); font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ok); display: block; margin-bottom: 5px; }
+  .saved code { font-family: var(--f-mono); font-size: 11.5px; }
+
+  .reserved {
+    margin: 26px 26px 26px;
+    border: 1px dashed var(--rule-firm);
+    padding: 26px 20px;
+    text-align: center;
+    color: var(--faint);
+  }
+  .reserved p { margin: 0; font-family: var(--f-mono); font-size: 11px; letter-spacing: 0.05em; }
+  .reserved p + p { margin-top: 6px; font-size: 10.5px; }
+
+  /* ---------- report pane ---------- */
+
+  .stats { display: grid; grid-template-columns: 1fr 1fr; }
+  .stat { padding: 13px 15px; border-bottom: 1px solid var(--rule); border-right: 1px solid var(--rule); }
+  .stat:nth-child(even) { border-right: 0; }
+  .stat dt {
+    font-family: var(--f-mono);
+    font-size: 9.5px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--faint);
+    margin-bottom: 3px;
+  }
+  .stat dd {
+    margin: 0;
+    font-family: var(--f-mono);
+    font-size: 1.06rem;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+  }
+  .stat dd small { font-size: 0.68em; font-weight: 400; color: var(--muted); }
+
+  .checks { padding: 4px 0 8px; }
+  .check {
+    display: grid;
+    grid-template-columns: 46px 1fr;
+    gap: 9px;
+    padding: 9px 15px;
+    border-bottom: 1px solid var(--rule);
+    align-items: start;
+  }
+  .check:last-child { border-bottom: 0; }
+  .tag {
+    font-family: var(--f-mono);
+    font-size: 9.5px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-align: center;
+    padding: 2px 0;
+    text-transform: uppercase;
+  }
+  .tag.ok   { background: var(--ok-soft);   color: var(--ok); }
+  .tag.warn { background: var(--warn-soft); color: var(--warn); }
+  .tag.fail { background: var(--fail-soft); color: var(--fail); }
+  .check .nm { font-size: 13px; font-weight: 500; }
+  .check .dt { font-size: 12px; color: var(--muted); line-height: 1.4; margin-top: 2px; }
+  .check.q .dt { display: none; }
+
+  .tally {
+    padding: 11px 15px;
+    border-top: 1px solid var(--rule-firm);
+    font-family: var(--f-mono);
+    font-size: 12px;
+    font-variant-numeric: tabular-nums;
+    display: flex;
+    gap: 14px;
+    flex-wrap: wrap;
+  }
+  .tally .g { color: var(--ok); }
+  .tally .a { color: var(--warn); }
+  .tally .r { color: var(--fail); }
+  .banner {
+    padding: 11px 15px;
+    font-size: 12.5px;
+    background: var(--fail-soft);
+    color: var(--fail);
+    border-top: 1px solid var(--rule);
+    display: none;
+  }
+  .banner.on { display: block; }
+
+  .notes {
+    margin-top: 26px;
+    padding: 18px 20px;
+    background: var(--shell);
+    border: 1px solid var(--rule);
+    border-left: 3px solid var(--accent);
+  }
+  .notes h3 { margin: 0 0 10px; font-size: 13px; font-family: var(--f-mono); letter-spacing: 0.12em; text-transform: uppercase; color: var(--accent); font-weight: 600; }
+  .notes ul { margin: 0; padding-left: 20px; }
+  .notes li { font-size: 13.5px; margin-bottom: 7px; color: var(--muted); max-width: 92ch; }
+  .notes li b { color: var(--ink); font-weight: 600; }
+
+  @media (max-width: 1200px) {
+    .panes { grid-template-columns: 240px minmax(0, 1fr); }
+    .pane.report { grid-column: 1 / -1; }
+    .stats { grid-template-columns: repeat(4, 1fr); }
+    .stat:nth-child(even) { border-right: 1px solid var(--rule); }
+    .stat:last-child { border-right: 0; }
+  }
+  @media (max-width: 800px) {
+    .panes { grid-template-columns: 1fr; }
+    .queue { max-height: 300px; }
+    .stats { grid-template-columns: 1fr 1fr; }
+    .question { font-size: 1.35rem; max-width: none; }
+  }
+</style>
+
+<div class="mockbar">
+  <strong>Mockup</strong>
+  <span>Phase 2 design spec &mdash; static data, no server. Real field names, real report values.</span>
+  <span class="sw">
+    <label for="state">Report state</label>
+    <select id="state">
+      <option value="ok">All clear (current params)</option>
+      <option value="warn">Thin stock &mdash; warning</option>
+      <option value="fail">Small prop &mdash; failure</option>
+    </select>
+  </span>
+</div>
+
+<div class="app">
+
+  <div class="topbar">
+    <div class="brand">
+      <h1>Measurement workstation</h1>
+      <span>drone-wood-frame</span>
+    </div>
+    <div class="progress">
+      <span class="txt" id="ptext">0 of 21 measured</span>
+      <span class="bar"><i id="pbar"></i></span>
+    </div>
+  </div>
+
+  <div class="panes">
+
+    <!-- QUEUE -->
+    <section class="pane">
+      <header><h2>To measure</h2><span class="hint" id="qhint">21 left</span></header>
+      <div class="queue" id="queue"></div>
+    </section>
+
+    <!-- ACTIVE FIELD -->
+    <section class="pane">
+      <header><h2>Current measurement</h2><span class="hint">from fields.yaml</span></header>
+
+      <div class="card">
+        <p class="target"><span class="lbl">writes to</span> <span id="t-file">params.yaml:11</span></p>
+        <h3 class="question" id="t-question">Measure actual wood stock thickness with calipers.</h3>
+        <p class="fid" id="t-id">stock_thickness</p>
+
+        <div class="entry">
+          <span class="inputwrap">
+            <input id="t-input" type="text" inputmode="decimal" value="2.7" aria-label="Measured value">
+            <span class="unit" id="t-unit">mm</span>
+          </span>
+          <span class="range" id="t-range">expected 1 &ndash; 8 mm</span>
+        </div>
+
+        <div class="rangewarn" id="t-warn">
+          <b>Warn</b>
+          <span id="t-warntext">Outside the expected range. It will still be saved.</span>
+        </div>
+
+        <div class="willchange">
+          <p class="wc-head">What this will change</p>
+          <pre class="diff" id="t-diff"></pre>
+          <pre class="diff" id="t-check"></pre>
+        </div>
+
+        <div class="actions">
+          <button class="primary" id="t-save">Save measurement</button>
+          <button class="ghost" id="t-skip">Skip for now</button>
+          <span class="kbd">Enter to save &middot; &darr; for next</span>
+        </div>
+
+        <div class="saved" id="t-saved">
+          <b>Saved</b>
+          <span id="t-savedtext"></span>
+        </div>
+      </div>
+
+      <div class="reserved">
+        <p>Reserved &mdash; component model with this dimension highlighted</p>
+        <p>Roadmap Phase 7. Not built in Phase 2; the layout leaves room now.</p>
+      </div>
+    </section>
+
+    <!-- REPORT -->
+    <section class="pane report">
+      <header><h2>Design state</h2><span class="hint">server, after each save</span></header>
+
+      <dl class="stats">
+        <div class="stat"><dt>Arm radius</dt><dd id="s-arm">91.9 <small>mm</small></dd></div>
+        <div class="stat"><dt>All-up weight</dt><dd id="s-auw">139.1 <small>g</small></dd></div>
+        <div class="stat"><dt>Thrust / weight</dt><dd id="s-twr">3.45</dd></div>
+        <div class="stat"><dt>CG offset</dt><dd id="s-cg">0.74 <small>mm</small></dd></div>
+      </dl>
+
+      <div class="checks" id="checks"></div>
+
+      <div class="tally" id="tally"></div>
+      <div class="banner" id="banner">This design does not currently validate. The measurement was saved &mdash; fix the design next.</div>
+    </section>
+  </div>
+
+  <div class="notes">
+    <h3>What to look at</h3>
+    <ul>
+      <li><b>One question at a time, in words.</b> The left rail is the queue; the centre asks a single plain-language question taken straight from <code>fields.yaml</code>. Nothing here is hardcoded &mdash; every field name, unit, range, and question comes from the spec file.</li>
+      <li><b>The diff before you commit to it.</b> &ldquo;What this will change&rdquo; shows the exact line in the exact file, with the trailing comment intact. That is the surgical writer's output made visible, and it is what makes a save trustworthy enough to run twenty-one times in an evening.</li>
+      <li><b>A value out of range warns and still saves.</b> Try 0.4 in the input. Measurements are facts; the design being wrong is a separate problem, reported separately.</li>
+      <li><b>Consequence is visible beside the input.</b> Use the <em>Report state</em> control in the blue bar to see all-clear, a warning, and a failure. In the real app that panel is whatever the server returns from <code>validate.py</code> &mdash; no check text or threshold is duplicated in the front end.</li>
+      <li><b>Room is left for Phase 7.</b> The dashed slot is where the component model with the highlighted dimension goes. Reserving it now means the layout does not get rebuilt later.</li>
+    </ul>
+  </div>
+</div>
+
+<script id="fielddata" type="application/json">[{"id":"stock_thickness","group":"Wood stock","q":"Measure actual wood stock thickness with calipers.","unit":"mm","file":"params.yaml","line":11,"pre":"  thickness_mm: ","post":"          # TODO measure with caliper","cur":"3.0","min":1.0,"max":8.0,"label":"Actual thickness (measure, do not trust the label)"},{"id":"prop_diameter","group":"Propellers","q":"Measure propeller diameter from tip to opposite tip.","unit":"mm","file":"params.yaml","line":17,"pre":"  diameter_mm: ","post":"          # TODO. 3\" = 76.2mm, 2.5\" = 63.5, 2\" = 51","cur":"76.0","min":35.0,"max":130.0,"label":"Diameter"},{"id":"motor_bolt_circle","group":"Motors","q":"Measure motor bolt circle hole to hole, across the base.","unit":"mm","file":"params.yaml","line":23,"pre":"  bolt_circle_mm: ","post":"        # TODO measure hole-to-hole across the motor base","cur":"9.0","min":4.0,"max":25.0,"label":"Bolt circle (hole to hole, across the base)"},{"id":"motor_base_diameter","group":"Motors","q":"Measure the motor base outside diameter.","unit":"mm","file":"params.yaml","line":25,"pre":"  base_diameter_mm: 12","post":"     # TODO","cur":".0","min":6.0,"max":40.0,"label":"Base diameter"},{"id":"motor_mass","group":"Motors","q":"Weigh one motor without propeller or screws.","unit":"g","file":"params.yaml","line":26,"pre":"  mass_g: ","post":".5                # TODO weigh one motor","cur":"6","min":1.0,"max":80.0,"label":"Mass (one motor)"},{"id":"motor_max_thrust","group":"Motors","q":"Measure maximum thrust per motor at the battery voltage.","unit":"g","file":"params.yaml","line":27,"pre":"  max_thrust_g: 12","post":"          # TODO per motor at your battery voltage, 100% throttle","cur":"0","min":10.0,"max":1000.0,"label":"Max thrust per motor"},{"id":"center_plate_width","group":"Centre plate","q":"Measure or choose the center plate width that fits the stack and strap slots.","unit":"mm","file":"params.yaml","line":38,"pre":"  size_mm: [","post":", 70]          # TODO must fit your FC stack + battery strap slots","cur":"70","min":30.0,"max":160.0,"label":null},{"id":"center_plate_length","group":"Centre plate","q":"Measure or choose the center plate length that fits the stack and strap slots.","unit":"mm","file":"params.yaml","line":38,"pre":"  size_mm: [70, ","post":"]          # TODO must fit your FC stack + battery strap slots","cur":"70","min":30.0,"max":160.0,"label":null},{"id":"fc_hole_pattern","group":"Centre plate","q":"Measure the square flight controller mounting hole pattern, hole to hole.","unit":"mm","file":"params.yaml","line":39,"pre":"  fc_hole_pattern_mm: ","post":".5   # TODO 16, 20, 25.5, or 30.5 - measure your flight board","cur":"25","min":10.0,"max":45.0,"label":"Mounting hole pattern (square, hole to hole)"},{"id":"battery_length","group":"Battery","q":"Measure battery length.","unit":"mm","file":"params.yaml","line":43,"pre":"  size_mm: [","post":"5, 32, 18]      # TODO L x W x H","cur":"6","min":20.0,"max":180.0,"label":null},{"id":"battery_width","group":"Battery","q":"Measure battery width.","unit":"mm","file":"params.yaml","line":43,"pre":"  size_mm: [65, ","post":", 18]      # TODO L x W x H","cur":"32","min":10.0,"max":80.0,"label":null},{"id":"battery_height","group":"Battery","q":"Measure battery height.","unit":"mm","file":"params.yaml","line":43,"pre":"  size_mm: [65, 32, 1","post":"]      # TODO L x W x H","cur":"8","min":5.0,"max":60.0,"label":null},{"id":"battery_mass","group":"Battery","q":"Weigh the battery.","unit":"g","file":"params.yaml","line":44,"pre":"  mass_g: ","post":"               # TODO weigh it","cur":"55.0","min":5.0,"max":500.0,"label":"Battery mass"},{"id":"camera_width","group":"Camera","q":"Measure the camera body width.","unit":"mm","file":"params.yaml","line":48,"pre":"  width_mm: 1","post":"             # TODO","cur":"9.0","min":5.0,"max":60.0,"label":"Body width"},{"id":"camera_mount_ear_spacing","group":"Camera","q":"Measure camera mount ear spacing.","unit":"mm","file":"params.yaml","line":49,"pre":"  mount_ear_spacing_mm: 1","post":" # TODO","cur":"9.0","min":5.0,"max":60.0,"label":"Mount ear spacing"},{"id":"flight_controller_mass","group":"Electronics","q":"Weigh the flight controller.","unit":"g","file":"components/loadout.yaml","line":9,"pre":"  - { name: flight_controller, mass_g: ","post":",  pos_mm: [0,   0,   12] }   # TODO","cur":"6.0","min":1.0,"max":80.0,"label":"FC mass"},{"id":"esc_4in1_mass","group":"Electronics","q":"Weigh the 4-in-1 ESC, or omit it later if ESCs are integrated.","unit":"g","file":"components/loadout.yaml","line":10,"pre":"  - { name: esc_4in1,          mass_g: ","post":",  pos_mm: [0,   0,   6]  }   # TODO or omit if ESCs are on the FC","cur":"7.0","min":0.0,"max":100.0,"label":"Mass each"},{"id":"camera_mass","group":"Electronics","q":"Weigh the camera.","unit":"g","file":"components/loadout.yaml","line":11,"pre":"  - { name: camera,            mass_g: ","post":",  pos_mm: [0,   28,  14] }   # TODO","cur":"5.0","min":0.5,"max":80.0,"label":"Camera mass"},{"id":"vtx_mass","group":"Electronics","q":"Weigh the video transmitter.","unit":"g","file":"components/loadout.yaml","line":12,"pre":"  - { name: vtx,               mass_g: ","post":",  pos_mm: [0,  -25,  14] }   # TODO","cur":"4.0","min":0.5,"max":80.0,"label":"VTX size and mass"},{"id":"antenna_mass","group":"Electronics","q":"Weigh the antenna.","unit":"g","file":"components/loadout.yaml","line":13,"pre":"  - { name: antenna,           mass_g: ","post":",  pos_mm: [0,  -40,  20] }   # TODO","cur":"3.0","min":0.1,"max":40.0,"label":"Antenna mass and length"},{"id":"receiver_mass","group":"Electronics","q":"Weigh the receiver.","unit":"g","file":"components/loadout.yaml","line":14,"pre":"  - { name: receiver,          mass_g: 1","post":".5,  pos_mm: [0,  -15,  16] }   # TODO","cur":"","min":0.1,"max":40.0,"label":"Receiver mass"}]</script>
+<script>
+(function () {
+  var FIELDS = JSON.parse(document.getElementById('fielddata').textContent);
+  var measured = Object.create(null);
+  var active = FIELDS[0];
+
+  var CHECKS = {
+    ok: [
+      ['ok','prop clearance','arm radius 91.87mm vs 60.81mm minimum (tip gap 53.92mm)'],
+      ['ok','fits the stock','needs 91.87mm reach, stock allows 170.78mm (diagonal orientation)'],
+      ['ok','props clear centre plate','prop inner edge at r=53.87mm, plate corner at r=49.5mm (gap +4.4mm)'],
+      ['ok','arm wide enough for motor screws','arm is 20.0mm, motor bolts need &gt;= 17.0mm to avoid splitting'],
+      ['ok','FC pattern fits the plate','25.5mm pattern on a 70x70mm plate leaves 22.2mm to the edge; 4.0mm minimum'],
+      ['ok','stock thickness','3.0mm - thin plywood arms flex and cause gyro noise; 3mm+ recommended'],
+      ['ok','battery fits centre plate','battery 65x32mm on a 70x70mm plate'],
+      ['ok','thrust-to-weight','TWR 3.45 (good), hover at ~54% throttle'],
+      ['ok','centre of gravity','CG is 0.7mm from thrust centre (x-0.0, y-0.7); limit 5.0mm'],
+      ['ok','frame mass fraction','wood is 16% of AUW (21.6g of 139.1g)']
+    ],
+    warn: [
+      ['ok','prop clearance','arm radius 91.87mm vs 60.81mm minimum (tip gap 53.92mm)'],
+      ['ok','fits the stock','needs 91.87mm reach, stock allows 170.78mm (diagonal orientation)'],
+      ['ok','props clear centre plate','prop inner edge at r=53.87mm, plate corner at r=49.5mm (gap +4.4mm)'],
+      ['ok','arm wide enough for motor screws','arm is 20.0mm, motor bolts need &gt;= 17.0mm to avoid splitting'],
+      ['ok','FC pattern fits the plate','25.5mm pattern on a 70x70mm plate leaves 22.2mm to the edge; 4.0mm minimum'],
+      ['warn','stock thickness','2.85mm - thin plywood arms flex and cause gyro noise; 3mm+ recommended'],
+      ['ok','battery fits centre plate','battery 65x32mm on a 70x70mm plate'],
+      ['ok','thrust-to-weight','TWR 3.48 (good), hover at ~54% throttle'],
+      ['ok','centre of gravity','CG is 0.7mm from thrust centre (x-0.0, y-0.7); limit 5.0mm'],
+      ['ok','frame mass fraction','wood is 15% of AUW (20.5g of 138.0g)']
+    ],
+    fail: [
+      ['fail','props clear centre plate','prop inner edge at r=39.0mm, plate corner at r=49.5mm (gap -10.5mm) - a negative gap means the props chop it'],
+      ['ok','prop clearance','arm radius 71.5mm vs 48.2mm minimum (tip gap 42.1mm)'],
+      ['ok','fits the stock','needs 71.5mm reach, stock allows 170.78mm (diagonal orientation)'],
+      ['ok','arm wide enough for motor screws','arm is 20.0mm, motor bolts need &gt;= 17.0mm to avoid splitting'],
+      ['ok','FC pattern fits the plate','25.5mm pattern on a 70x70mm plate leaves 22.2mm to the edge; 4.0mm minimum'],
+      ['ok','stock thickness','3.0mm - thin plywood arms flex and cause gyro noise; 3mm+ recommended'],
+      ['ok','battery fits centre plate','battery 65x32mm on a 70x70mm plate'],
+      ['ok','thrust-to-weight','TWR 3.45 (good), hover at ~54% throttle'],
+      ['ok','centre of gravity','CG is 0.7mm from thrust centre (x-0.0, y-0.7); limit 5.0mm'],
+      ['ok','frame mass fraction','wood is 16% of AUW (21.6g of 139.1g)']
+    ]
+  };
+  var STATS = {
+    ok:   ['91.9','139.1','3.45','0.74'],
+    warn: ['91.9','138.0','3.48','0.74'],
+    fail: ['71.5','139.1','3.45','0.74']
+  };
+
+  function esc(s) {
+    return String(s).replace(/&(?!amp;|lt;|gt;)/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  }
+
+  /* ---- queue ---- */
+  function drawQueue() {
+    var host = document.getElementById('queue');
+    host.textContent = '';
+    var seen = '';
+    FIELDS.forEach(function (f) {
+      if (f.group !== seen) {
+        seen = f.group;
+        var g = document.createElement('div');
+        g.className = 'qgroup';
+        g.textContent = f.group;
+        host.appendChild(g);
+      }
+      var b = document.createElement('button');
+      b.className = 'qitem' + (measured[f.id] !== undefined ? ' done' : '');
+      b.setAttribute('aria-current', f.id === active.id ? 'true' : 'false');
+      b.innerHTML = '<span class="dot"></span><span class="qname">' + esc(f.id) +
+                    '</span><span class="qval">' +
+                    esc(measured[f.id] !== undefined ? measured[f.id] : f.cur) + ' ' + esc(f.unit) + '</span>';
+      b.addEventListener('click', function () { select(f); });
+      host.appendChild(b);
+    });
+    var done = Object.keys(measured).length;
+    document.getElementById('ptext').textContent = done + ' of ' + FIELDS.length + ' measured';
+    document.getElementById('pbar').style.width = (done / FIELDS.length * 100) + '%';
+    document.getElementById('qhint').textContent = (FIELDS.length - done) + ' left';
+  }
+
+  /* ---- field card ---- */
+  function select(f) {
+    active = f;
+    document.getElementById('t-file').textContent = f.file + ':' + f.line;
+    document.getElementById('t-question').textContent = f.q;
+    document.getElementById('t-id').textContent = f.id;
+    document.getElementById('t-unit').textContent = f.unit;
+    document.getElementById('t-range').textContent =
+      'expected ' + trim(f.min) + ' – ' + trim(f.max) + ' ' + f.unit;
+    document.getElementById('t-input').value = measured[f.id] !== undefined ? measured[f.id] : f.cur;
+    document.getElementById('t-saved').classList.remove('on');
+    drawQueue();
+    drawDiff();
+  }
+
+  function trim(n) { return String(parseFloat(n)); }
+
+  function drawDiff() {
+    var f = active;
+    var v = document.getElementById('t-input').value.trim();
+    var pre = document.getElementById('t-diff');
+    var chk = document.getElementById('t-check');
+
+    if (v === '' || isNaN(parseFloat(v))) {
+      pre.innerHTML = '<span class="keep">enter a number to preview the change</span>';
+      chk.style.display = 'none';
+      document.getElementById('t-warn').classList.remove('on');
+      return;
+    }
+
+    pre.innerHTML =
+      '<span class="keep">' + esc(f.file) + '  line ' + f.line + '</span>\n' +
+      '<span class="del">- ' + esc(f.pre + f.cur + f.post) + '</span>\n' +
+      '<span class="add">+ ' + esc(f.pre + v + f.post) + '</span>';
+
+    if (f.label) {
+      chk.style.display = '';
+      chk.innerHTML =
+        '<span class="keep">docs/measurements.md</span>\n' +
+        '<span class="del">- - [ ] ' + esc(f.label) + ': ____ ' + esc(f.unit) + '</span>\n' +
+        '<span class="add">+ - [x] ' + esc(f.label) + ': ' + esc(v) + ' ' + esc(f.unit) + '</span>';
+    } else {
+      chk.style.display = '';
+      chk.innerHTML = '<span class="keep">docs/measurements.md  — no checklist line for this field</span>';
+    }
+
+    var n = parseFloat(v);
+    var w = document.getElementById('t-warn');
+    if (n < f.min || n > f.max) {
+      w.classList.add('on');
+      document.getElementById('t-warntext').textContent =
+        f.id + ' is outside the expected ' + trim(f.min) + '–' + trim(f.max) + ' ' +
+        f.unit + ' range. It will still be saved.';
+    } else {
+      w.classList.remove('on');
+    }
+  }
+
+  function save() {
+    var v = document.getElementById('t-input').value.trim();
+    if (v === '' || isNaN(parseFloat(v))) return;
+    measured[active.id] = v;
+    var s = document.getElementById('t-saved');
+    document.getElementById('t-savedtext').innerHTML =
+      'Changed one line in <code>' + esc(active.file) + ':' + active.line + '</code>' +
+      (active.label ? ' and ticked <code>' + esc(active.label) + '</code> in the checklist.' : '. No checklist line for this field.');
+    s.classList.add('on');
+    drawQueue();
+  }
+
+  /* ---- report ---- */
+  function drawReport(state) {
+    var rows = CHECKS[state];
+    var host = document.getElementById('checks');
+    host.textContent = '';
+    var g = 0, a = 0, r = 0;
+    rows.forEach(function (c) {
+      if (c[0] === 'ok') g++; else if (c[0] === 'warn') a++; else r++;
+      var d = document.createElement('div');
+      d.className = 'check';
+      d.innerHTML = '<span class="tag ' + c[0] + '">' + (c[0] === 'ok' ? 'ok' : c[0]) + '</span>' +
+                    '<span><span class="nm">' + esc(c[1]) + '</span><span class="dt">' + c[2] + '</span></span>';
+      host.appendChild(d);
+    });
+    document.getElementById('tally').innerHTML =
+      '<span class="g">' + g + ' passed</span><span class="a">' + a + ' warnings</span><span class="r">' + r + ' failures</span>';
+    document.getElementById('banner').classList.toggle('on', r > 0);
+    var st = STATS[state];
+    document.getElementById('s-arm').innerHTML = st[0] + ' <small>mm</small>';
+    document.getElementById('s-auw').innerHTML = st[1] + ' <small>g</small>';
+    document.getElementById('s-twr').textContent = st[2];
+    document.getElementById('s-cg').innerHTML = st[3] + ' <small>mm</small>';
+  }
+
+  /* ---- wire ---- */
+  document.getElementById('t-input').addEventListener('input', drawDiff);
+  document.getElementById('t-input').addEventListener('keydown', function (e) {
+    if (e.key === 'Enter') { e.preventDefault(); save(); }
+  });
+  document.getElementById('t-save').addEventListener('click', save);
+  document.getElementById('t-skip').addEventListener('click', function () {
+    var i = FIELDS.indexOf(active);
+    select(FIELDS[(i + 1) % FIELDS.length]);
+  });
+  document.getElementById('state').addEventListener('change', function (e) {
+    drawReport(e.target.value);
+  });
+
+  select(FIELDS[0]);
+  document.getElementById('t-input').value = '2.7';
+  drawDiff();
+  drawReport('ok');
+})();
+</script>
+
+</body>
+</html>
