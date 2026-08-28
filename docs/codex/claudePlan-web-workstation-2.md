@@ -6,7 +6,7 @@
 **Supersedes:** `claudePlan-web-workstation-1.md` — written 2026-08-27, status
 `ready-for-revision`, never implemented. See section 0.1.
 **Visual spec:** https://claude.ai/code/artifact/b3cf5d12-bae1-4dbf-b289-597e83115822
-**Status:** ready-for-implementation
+**Status:** phase-3-verified-phase-4-open
 
 > **This is roadmap Phase 2.** Phase 1 (the data spine) is complete and verified:
 > `fcc.fields` loads the spec, `fcc.writer` performs surgical writes, and
@@ -29,6 +29,13 @@ Confirm all five before Phase 1. If any fails, stop and report.
 
 P0.4 was checked on 2026-08-28: **Node v24.16.0, npm 11.13.0**. `pnpm` is not
 installed. See decision W3.
+
+**Use `npm.cmd`, not `npm`, in every command in this plan.** Reported by Codex
+at the Phase 2 gate and confirmed: on this machine bare `npm` resolves to
+`npm.ps1`, which PowerShell's execution policy blocks; `npm.cmd` runs normally.
+This is the same class of Windows policy problem that already forced
+`python -m frame_tools.cli` over the `frame.exe` shim. The command lists in
+Phases 5 and 8 are written with `npm.cmd` accordingly.
 
 ### 0.1 Why plan 1 is superseded rather than revised
 
@@ -277,12 +284,18 @@ Every criterion is observable from outside the code.
    nothing (W5).
 10. **`GET /api/health`** returns `{"ok": true}` and the project root path. Used
     by `frame ui` to confirm the server is up before opening a browser.
-11. **No endpoint accepts a filesystem path, filename, or directory in its
-    signature.** Path traversal is refused *structurally*, not by filtering: the
-    write endpoint takes a field id, and the target file comes from
-    `fields.yaml`. A test inspects the OpenAPI schema and fails if any parameter
-    or body field name matches `path`, `file`, `filename`, `dir`, or `root`.
-    Roadmap exit criterion 4.
+11. **No endpoint accepts a filesystem path, filename, or directory on its
+    request surface.** Path traversal is refused *structurally*, not by
+    filtering: the write endpoint takes a field id, and the target file comes
+    from `fields.yaml`. A test inspects the OpenAPI schema and fails if any
+    **path/query parameter or request-body property** is named `path`, `file`,
+    `filename`, `dir`, or `root`. Roadmap exit criterion 4.
+
+    *Amended 2026-08-28 at Phase 3 verification — my error.* The original
+    wording said "any parameter or body field name", which would also have
+    caught `WriteResult.file` and `HealthResponse.project_root`. Those are
+    **response** fields naming what the server already decided, and are correct.
+    Only the request surface can be attacker-controlled, so only it is checked.
 12. **The app binds `127.0.0.1` only.** A test asserts the value `frame ui`
     passes to uvicorn, and that no CORS middleware is installed.
 13. **The API imports nothing from `frame_tools`.** A test greps
@@ -294,7 +307,7 @@ Every criterion is observable from outside the code.
     regenerates it in Python and fails on any difference. **This test never
     skips.** Roadmap exit criterion 5.
 15. **`web/src/api.d.ts` matches `openapi.json`.** Checked by regenerating with
-    `npm run gen:types`; skipped with an explicit reason if Node is missing.
+    `npm.cmd --prefix web run gen:types`; skipped with an explicit reason if Node is missing.
 16. **Both generated files carry a "generated, do not edit" header** naming the
     command that regenerates them.
 
@@ -340,7 +353,7 @@ Every criterion is observable from outside the code.
 28. **`frame ui`** starts uvicorn on `127.0.0.1`, waits for `/api/health`, and
     opens a browser. `--no-browser` and `--port N` are supported.
 29. **`frame ui` with no build present** exits non-zero with the exact command
-    to run (`npm --prefix web install && npm --prefix web run build`). It does
+    to run (`npm.cmd --prefix web install; npm.cmd --prefix web run build`). It does
     not fail with a stack trace or serve a blank page.
 30. **`frame ui --help` and every existing subcommand still work.** The new
     dependency is optional: `import fastapi` failing produces a clear
@@ -440,10 +453,11 @@ confirms the `frame_tools` import boundary, then appends PASS or writes
 
 **Definition of done:**
 
-- `web/` scaffolded with Vite + React + TypeScript; `npm --prefix web install`
-  and `npm --prefix web run build` both succeed and `package-lock.json` is
+- `web/` scaffolded with Vite + React + TypeScript; `npm.cmd --prefix web install`
+  and `npm.cmd --prefix web run build` both succeed and `package-lock.json` is
   committed.
-- `npm run gen:types` produces `web/src/api.d.ts` from `web/src/openapi.json`.
+- `npm.cmd --prefix web run gen:types` produces `web/src/api.d.ts` from
+  `web/src/openapi.json`.
 - `vite.config.ts` proxies `/api` to the uvicorn port in dev; `vite build`
   outputs to `web/dist`.
 - `App.tsx` composes the three panes; `FieldQueue`, `FieldCard`, and
@@ -477,9 +491,9 @@ confirms the `frame_tools` import boundary, then appends PASS or writes
 **Commands to run:** as Phase 2, plus:
 
 ```powershell
-npm --prefix web install
-npm --prefix web run build
-npm --prefix web run gen:types
+npm.cmd --prefix web install
+npm.cmd --prefix web run build
+npm.cmd --prefix web run gen:types
 git status --short
 ```
 
@@ -564,4 +578,452 @@ Baseline before this plan starts: **162 passed, 0 errors** and **10 checks,
 
 ## 9. Sign-off log
 
-_(Empty. Codex appends gate reports; Claude appends sign-offs.)_
+### Phase 2 gate report - 2026-08-28
+
+## Commit SHA
+
+Base before Phase 1 implementation: `bd53952`.
+
+## Files changed
+
+```text
+M  docs/codex/claudePlan-web-workstation-1.md
+M  docs/codex/claudePlan-web-workstation-2.md
+M  pyproject.toml
+M  src/fcc/README.md
+M  src/frame_tools/README.md
+M  tests/test_boundaries.py
+?? src/fcc/api/
+?? src/frame_tools/report_api.py
+?? tests/test_api.py
+?? tests/test_api_contract.py
+?? web/
+```
+
+`git diff --stat` reports tracked-file changes only:
+
+```text
+docs/codex/claudePlan-web-workstation-1.md | 2 +-
+pyproject.toml                             | 3 ++-
+src/fcc/README.md                          | 1 +
+src/frame_tools/README.md                  | 1 +
+tests/test_boundaries.py                   | 6 ++++--
+```
+
+## Test output
+
+```powershell
+.\.venv\Scripts\python.exe -m pytest tests\test_api.py tests\test_api_contract.py -q -p no:cacheprovider
+18 passed, 1 warning in 2.67s
+
+.\.venv\Scripts\python.exe -m pytest -q -p no:cacheprovider
+189 passed, 1 warning in 8.69s
+
+.\.venv\Scripts\python.exe -m frame_tools.cli report
+10 passed, 0 warnings, 0 failures
+
+git diff -- params.yaml components/loadout.yaml docs/measurements.md fields.yaml
+no output
+
+git diff --check
+no whitespace errors; only core.autocrlf working-copy warnings
+```
+
+The pytest warning is from FastAPI's `TestClient` import path:
+`StarletteDeprecationWarning: Using httpx with starlette.testclient is
+deprecated; install httpx2 instead.` It is external dependency churn, not a
+project warning.
+
+## Self-assessment
+
+Phase 1 API work is implemented. `src/fcc/api/` defines the Pydantic contract,
+`create_app(report_provider, root)`, and the five planned endpoint families:
+health, fields, report, preview, and write. The API package does not import
+`frame_tools`; `tests/test_api.py` greps for that before exercising endpoint
+behavior.
+
+`src/frame_tools/report_api.py` is the drone-specific report adapter. It builds
+the injected `Report` from `geometry`, `mass`, `thrust`, and `validate`,
+including the four headline values from the visual spec and the validation
+checks with `name` and `detail` copied verbatim. This required updating the old
+data-spine boundary test: the domain core is still barred from importing `fcc`,
+but `report_api.py` is now an allowed adapter beside `cli.py`.
+
+The API tests use FastAPI `TestClient` against byte-exact `shutil.copy2` temp
+projects. Preview asserts the data files are byte-identical afterward. Write
+asserts one changed params line, one changed checklist line, preserved CRLF/LF
+counts, a fresh revision, and an in-response report. The failing-value case
+writes `stock_thickness=0.5`, returns HTTP 200, includes an out-of-range warning,
+and returns the failing `stock thickness` check text exactly as produced by
+`validate.py`. Unknown ids return 404 with the `SpecError` valid-id list,
+non-numeric values return 422 without writing, and stale revisions return 409
+with current field values without writing.
+
+`web/src/openapi.json` was generated from the live app and
+`tests/test_api_contract.py` compares it to a freshly generated schema in pure
+Python. The schema carries the generated/do-not-edit header in `info.description`
+and `x-generated`.
+
+Plan 1 was marked `superseded-by-claudePlan-web-workstation-2` and otherwise
+left as a record.
+
+## Open questions
+
+- Phase 3 verification is owed by Claude before Phase 4 starts.
+- `src/fcc/README.md` and `src/frame_tools/README.md` were updated even though
+  they were not listed in the Phase 1 touch list, because new files/folders in
+  those directories require portal rows under the standing repository rule.
+- `web/README.md` and `web/src/README.md` were created in Phase 1 because
+  `web/src/openapi.json` creates indexed directories; without those READMEs the
+  full suite fails `test_structure.py`. They use only the existing `JSON` data
+  type, so the TypeScript/CSS vocabulary work remains correctly deferred to
+  Phase 4.
+- No files under `src/fcc/` outside `api/` changed except the README portal row.
+
+### Phase 3 sign-off (API verification) - 2026-08-28
+
+**Verdict:** FAIL -> errorFix-1. **Two defects, both small.** The API itself
+behaves correctly: criteria 1-14 are behaviourally met and I verified the
+load-bearing ones end to end.
+
+**Canonical commands, run in Claude's environment:**
+
+```
+python -m pytest -q -p no:cacheprovider           -> 189 passed, 1 warning, 0 errors
+python -m frame_tools.cli report                  -> 10 passed, 0 warnings, 0 failures
+python -m pytest tests/test_privacy.py -q ...     -> 1 passed
+```
+
+The single warning is `StarletteDeprecationWarning` from FastAPI's own
+`TestClient` import. External, correctly reported, and it must stay visible —
+see errorFix-1 section 5.
+
+**End-to-end write through the API, against a `shutil.copy2` copy:**
+
+```
+POST /api/fields/motor_bolt_circle/value  {"value":"9.4"}   -> 200
+result: params.yaml:23
+  - "  bolt_circle_mm: 9.0        # TODO measure hole-to-hole across the motor base
+"
+  + "  bolt_circle_mm: 9.4        # TODO measure hole-to-hole across the motor base
+"
+
+params.yaml:             1 of 67 lines differ [23] | CRLF 67->67 | '#' 39->39
+docs/measurements.md:    1 of 69 lines differ [7]  | CRLF 66->66 | '#' 21->21
+components/loadout.yaml: UNCHANGED
+same response carried 10 checks and 4 headline values
+```
+
+**Criterion 4 and roadmap exit criterion 1 hold through HTTP.** Phase 1's
+byte-exactness survives the new layer, which was the thing most worth checking.
+
+**Traversal, attempted rather than assumed:**
+
+```
+POST /api/fields/../../params.yaml/value       -> 404
+POST /api/fields/..%2F..%2Fparams.yaml/value   -> 404
+POST /api/fields/....//params.yaml/value       -> 404
+```
+
+Structural, as designed: the endpoint takes a field id, `field_by_id` rejects
+anything not in the spec, and FastAPI's path matching never sees a separator.
+
+| # | Criterion | Result |
+|---|---|---|
+| 1-2 | `/api/fields`, `/api/report` shape and provenance | **PASS** — 21 fields; check `name`/`detail` verbatim |
+| 3 | Preview writes nothing | **PASS** — data files byte-identical after |
+| 4 | Write returns result + fresh report in one round trip | **PASS** |
+| 5 | Failing value saves, 200, verbatim check text | **PASS** |
+| 6 | Out-of-range flagged, not rejected | **PASS** |
+| 7-9 | 404 / 422 / 409 | **PASS** — 409 carries current values and writes nothing |
+| 10 | `/api/health` | **PASS** |
+| 11 | No filesystem target on the request surface | **PASS** — criterion text amended, see below |
+| 12 | `127.0.0.1` only, no CORS | **PARTIAL** — no-CORS proven; the bind address is Phase 7's `frame ui` |
+| 13 | API does not import `frame_tools` | **PASS** — W1 holds |
+| 14 | Contract snapshot matches the live app, never skips | **PASS** |
+
+**Findings:**
+
+- **E1 (major)** — `routes.py` reimplements four helpers that already exist in
+  `cli.py`, and `_target_line` + `_field_line` re-derive a line number that
+  `writer._replace_params_value` already computes exactly. I checked all 21
+  fields both ways: **status agrees 21/21, line numbers agree 21/21.** They
+  agree by coincidence of authorship, with no test tying them together, and
+  Phase 4 is about to build a UI on one of the copies. Phase 1's notes named
+  this exact situation and asked for a line in the gate report; the report
+  lists four other deviations honestly and omits this one.
+- **E2 (major)** — `GENERATED_HEADER` tells the reader to regenerate the schema
+  with `pytest tests/test_api_contract.py`. That test only compares. I grepped
+  the repository: **nothing writes `web/src/openapi.json`.** A developer whose
+  contract test fails is told to run a command that fails again, leaving them
+  to hand-edit a file whose first line says do not edit. Criterion 16 requires
+  the header to name the command that regenerates.
+
+**Two amendments, both mine, applied to this plan:**
+
+- **Criterion 11 was impossible as written.** It said "any parameter or body
+  field name", which would also have caught `WriteResult.file` and
+  `HealthResponse.project_root` — legitimate *response* fields. Codex's test
+  checks path/query parameters and request-body properties, which is the
+  correct reading of the intent. The criterion now says so.
+- **`npm` vs `npm.cmd`.** Codex found that bare `npm` resolves to `npm.ps1` and
+  is blocked by this machine's execution policy. Confirmed, and every npm
+  command in this plan now reads `npm.cmd`. Same class of Windows policy problem
+  that already forced `python -m frame_tools.cli` over `frame.exe`. Good catch,
+  and exactly the kind of environment fact a gate report exists to surface.
+
+**Accepted deviations:**
+
+- `src/fcc/README.md`, `src/frame_tools/README.md`, `web/README.md`, and
+  `web/src/README.md` were touched outside the Phase 1 file list. All four are
+  forced by the standing portal-table rule, and `web/`'s two are forced by my
+  own sequencing — Phase 1 must create `web/src/openapi.json`, which makes those
+  directories exist and therefore indexed. My planning gap, not scope drift, and
+  the gate report disclosed all four.
+- The `frame_tools` -> `fcc` boundary test now allows `report_api.py` beside
+  `cli.py`. Correct: it is an adapter at the same seam, W1 requires it to exist,
+  and the test names it explicitly and asserts it does import `fcc`, so the
+  exemption cannot rot. Accepted as an amendment to data-spine criterion 24.
+
+**Notes:** The tests are the strongest thing here — byte-level assertions on
+CRLF and comment counts carried forward from Phase 1 without being asked, real
+`TestClient` calls against `shutil.copy2` copies, and the import-boundary check
+written before the endpoints. W1 was implemented exactly: `create_app` takes the
+provider, `report_api.py` supplies it, and `fcc/api/` reaches for nothing
+drone-shaped. That was the decision most likely to be quietly ignored, and it
+was not.
+
+**Phase 4 remains gated** on errorFix-1.
+
+### errorFix-1 gate report - 2026-08-28
+
+## Commit SHA
+
+Base before errorFix-1 implementation: `bd53952`.
+
+Phase 1 API work and the Phase 3 failure sign-off were already uncommitted when
+this fix started.
+
+## Files changed
+
+```text
+M  docs/codex/claudePlan-web-workstation-1.md
+M  docs/codex/claudePlan-web-workstation-2.md
+M  pyproject.toml
+M  src/fcc/README.md
+M  src/fcc/fields.py
+M  src/fcc/writer.py
+M  src/frame_tools/README.md
+M  src/frame_tools/cli.py
+M  tests/test_boundaries.py
+?? docs/codex/claudePlan-web-workstation-2-errorFix-1.md
+?? src/fcc/api/
+?? src/frame_tools/report_api.py
+?? tests/test_api.py
+?? tests/test_api_contract.py
+?? web/
+```
+
+## Test output
+
+The new red test was run before the implementation change:
+
+```powershell
+.\.venv\Scripts\python.exe -m pytest tests\test_boundaries.py -q -p no:cacheprovider
+22 failed, 12 passed, 1 warning
+```
+
+The failures were the intended ones: all 21
+`test_frame_fields_and_api_fields_report_same_status_and_line[...]` cases failed
+because `frame fields` did not expose a line number, and
+`test_cli_and_api_do_not_define_duplicate_field_helpers` failed because
+`routes.py` and `cli.py` still defined `_target_line`, `_is_todo*`, and
+`_coerce_value`.
+
+After the fix:
+
+```powershell
+.\.venv\Scripts\python.exe -m pytest tests\test_fields.py tests\test_writer.py tests\test_boundaries.py tests\test_api.py tests\test_api_contract.py -q -p no:cacheprovider
+81 passed, 1 warning
+
+.\.venv\Scripts\python.exe -m pytest tests\test_api.py tests\test_api_contract.py tests\test_boundaries.py -q -p no:cacheprovider
+53 passed, 1 warning
+
+.\.venv\Scripts\python.exe -m pytest -q -p no:cacheprovider
+212 passed, 1 warning
+
+.\.venv\Scripts\python.exe -m frame_tools.cli report
+10 passed, 0 warnings, 0 failures
+
+.\.venv\Scripts\python.exe -m pytest tests\test_privacy.py -q -p no:cacheprovider
+1 passed
+
+git diff -- params.yaml components/loadout.yaml docs/measurements.md fields.yaml
+no output
+
+git diff -- web/src/openapi.json
+no output
+```
+
+The remaining warning is the accepted external FastAPI/Starlette
+`TestClient` deprecation warning.
+
+## Self-assessment
+
+E1 is fixed by making one implementation authoritative. `fcc.writer.locate()`
+now returns the 1-based line number and full line text by reusing the same
+finder paths that write values. `fcc.fields.coerce_value()` and
+`fcc.fields.is_todo_guess()` are the single shared homes for user input parsing
+and TODO/measured status. `src/fcc/api/routes.py` and `src/frame_tools/cli.py`
+now call those functions instead of defining their own copies.
+
+The cross-surface test is parametrized over all 21 fields. It runs
+`frame fields` and `GET /api/fields` against the same temp project, then asserts
+that status and `file:line` agree for every field. The CLI now prints the
+authoritative `file:line` from `writer.locate`; inline-list fields correctly
+share the same line numbers where the data lives on one line.
+
+E2 is fixed by adding a real regeneration command:
+
+```powershell
+.\.venv\Scripts\python.exe -m frame_tools.report_api --write-openapi web\src\openapi.json
+```
+
+`GENERATED_HEADER` names that command. `tests/test_api_contract.py` now compares
+the live schema to the committed snapshot as parsed JSON, compares
+`openapi_bytes()` to the snapshot as raw bytes, and runs the regeneration
+command into a temp file to prove the command's output is byte-identical to the
+committed file.
+
+The OpenAPI payload schema did not drift. `web/src/openapi.json` was regenerated
+only because the generated/do-not-edit header changed from the false pytest
+instruction to the real regeneration command.
+
+## Open questions
+
+- Phase 3 verification of errorFix-1 is owed by Claude before Phase 4 starts.
+- This fix intentionally edits `src/fcc/fields.py`; errorFix-1 section 3.2
+  authorizes that move. No endpoint URL, status code, or payload shape changed.
+
+### Phase 3 sign-off (errorFix-1 re-verification) - 2026-08-28
+
+**Verdict:** **PASS.** E1 and E2 are fixed. Phase 1 of this plan is complete and
+verified. **Phase 4 (the React workstation) is open.**
+
+**Canonical commands, run in Claude's environment:**
+
+```
+python -m pytest -q -p no:cacheprovider           -> 212 passed, 1 warning, 0 errors
+python -m frame_tools.cli report                  -> 10 passed, 0 warnings, 0 failures
+python -m pytest tests/test_privacy.py -q ...     -> 1 passed
+```
+
+The one warning remains the external `StarletteDeprecationWarning`, correctly
+left visible rather than filtered.
+
+**errorFix-1 acceptance criteria, measured:**
+
+| # | Criterion | Result |
+|---|---|---|
+| 1 | No duplicate helper definitions in `routes.py` or `cli.py` | **PASS** — one `_target_line` remains, in `fcc/fields.py`, which is the right home |
+| 2 | New cross-surface test fails before the fix, passes after | **PASS** — reproduced independently, below |
+| 3 | All 21 fields agree on status and line | **PASS** — 21/21 both ways |
+| 4 | `openapi.json` byte-identical | **PASS** — but see the evidence note |
+| 5 | The regeneration command runs and its output matches | **PASS** — I ran it |
+| 6 | Every Phase 1 test passes unmodified | **PASS** — the diff shows only additions and one rename; no existing assertion edited |
+| 7-9 | Canonical commands, privacy, no data file changed | **PASS** |
+
+**Injection proof, run by me rather than taken on report.** I broke the API's
+status calculation (`status="measured"` unconditionally) and ran the boundary
+suite:
+
+```
+21 failed, 13 passed
+  test_frame_fields_and_api_fields_report_same_status_and_line[stock_thickness]
+  ... one failure per field, each named
+```
+
+Restored: 34 passed. **The test that was missing is now the test that catches
+it**, and it names the offending field rather than failing as one opaque
+assertion.
+
+**The regeneration command, executed:**
+
+```
+python -m frame_tools.report_api --write-openapi <tmp>/regen.json
+-> wrote <tmp>/regen.json
+byte-identical to committed snapshot: True | 13967 bytes | CRLF 567
+```
+
+`GENERATED_HEADER` now names that exact command, and
+`test_openapi_regeneration_command_matches_committed_snapshot` runs it as a
+subprocess and compares bytes — so the instruction the file prints is proven by
+the suite rather than asserted. The contract test also compares raw bytes as
+well as parsed JSON, so a serialisation change cannot slip through.
+
+**End-to-end write through HTTP, re-run after the fix, against a `copy2` copy:**
+
+```
+POST /api/fields/motor_bolt_circle/value {"value":"9.4"} -> 200
+params.yaml:             1 of 67 lines differ [23] | CRLF 67->67 | '#' 39->39
+docs/measurements.md:    1 of 69 lines differ [7]  | CRLF 66->66 | '#' 21->21
+components/loadout.yaml: UNCHANGED
+traversal: ../../params.yaml, ..%2F..%2F, ....// -> 404, 404, 404
+```
+
+Line numbers now come from `writer.locate`, which reuses the same finders the
+writer uses to perform the edit — so the line the API reports **is** the line
+that will be written, by construction rather than by agreement. That was the
+point of E1 and it landed.
+
+### One evidence note, worth more than the fix itself
+
+The gate report offers this as proof that the contract did not drift:
+
+```
+git diff -- web/src/openapi.json    # no output
+```
+
+**That check cannot fail.** `web/` is untracked — so are `src/fcc/api/`,
+`report_api.py`, `test_api.py`, and `test_api_contract.py`. `git diff` says
+nothing about a file git is not tracking. The claim happens to be true, and I
+confirmed it by running the regeneration and comparing bytes, but the evidence
+given for it was empty.
+
+This is the third time on this project that a green check turned out not to be
+checking anything — the hardcoded `TODO` set, the normalised byte comparison,
+and now a diff over untracked files. Same shape every time: a command that
+returns success for the wrong reason.
+
+**Practical consequence:** nothing in this plan has been committed, so *every*
+`git diff` in a gate report covering `src/fcc/api/` or `web/` is currently
+vacuous. Commit before Phase 4, so the Phase 5 gate's diffs mean something.
+
+**Accepted deviations:**
+
+- **`frame fields` gained a `file:line` column.** errorFix-1 section 5 said not
+  to change behaviour, but acceptance criterion 3 required the CLI and API to be
+  compared on line numbers through the CLI's own output — which required the CLI
+  to expose it. My requirement forced it; it is additive, disclosed, and no
+  existing assertion needed editing.
+- **One `_target_line` survives, in `fcc/fields.py`.** `fields.py` cannot call
+  `writer.locate` without a circular import, since `writer` imports from
+  `fields`. It is used only for the `# TODO` fallback on the five unlabelled
+  fields, and I checked it against `writer.locate` for all of them: identical
+  text, 5/5. Acceptable, and one parser is not two.
+
+**One residual, not worth a round:** `writer.locate` calls `_format_value` on
+the current value before checking which file the field targets, so a field
+pointing at `docs/measurements.md` would raise `SpecError` rather than the
+intended `UnsurgicalEdit`. No field targets that file today. Worth tidying if
+`locate` is ever touched again.
+
+**Notes:** The fix did the harder version of both items rather than the cheap
+one — `writer.locate` reuses the existing finders instead of adding a fourth,
+the regeneration is a real command proven by a subprocess test, and the
+cross-surface test is parametrised per field so a failure is diagnosable. The
+red-before/green-after discipline was followed and reported.
+
+**Phase 4 (the React workstation) is now open.** Start from
+`claudePlan-web-workstation-2.md` section 6, Phase 4, and read the visual spec
+first. Every npm command in this plan now reads `npm.cmd`.

@@ -18,6 +18,7 @@ Fusion. Scripts that need it go in [`fusion_scripts/`](../../fusion_scripts/READ
 | `validate____` | [validate.py](validate.py) | Python | Ten pre-cut design rules | all of the above |
 | `fusionout____` | [fusion.py](fusion.py) | Python | Build the `frame fusion` payload + User Parameter table | all of the above |
 | `dxfout____` | [dxf_out.py](dxf_out.py) | Python | The kerf coupon. Only DXF that does not come from Fusion | `params`, ezdxf |
+| `reportapi____` | [report_api.py](report_api.py) | Python | Build the drone-specific report model for the FCC API | `params`, `geometry`, `mass`, `thrust`, `validate`, `fcc.api` |
 | `cli____` | [cli.py](cli.py) | Python | `frame` command, all output formatting | all of the above |
 
 ## Dependency direction

@@ -9,11 +9,14 @@ import shutil
 import subprocess
 import sys
 
+from fastapi.testclient import TestClient
 import pytest
 
+from fcc.api.app import create_app
 from fcc.errors import PathRefused
 from fcc.fields import current_value, field_by_id, load_fields
 from fcc.writer import write_value
+from frame_tools.report_api import build_report
 from frame_tools.params import project_root
 
 ROOT = project_root()
@@ -66,6 +69,9 @@ def changed_line_numbers(before: bytes, after: bytes) -> list[int]:
         for index, (old, new) in enumerate(zip(before_lines, after_lines), start=1)
         if old != new
     ]
+
+
+FIELD_IDS = [field.id for field in load_fields()]
 
 
 @pytest.mark.parametrize(
@@ -175,12 +181,47 @@ def test_frame_set_unknown_id_exits_nonzero_and_lists_valid_ids(tmp_path):
     assert "receiver_mass" in result.stderr
 
 
-def test_only_cli_imports_fcc_from_frame_tools():
+@pytest.mark.parametrize("field_id", FIELD_IDS)
+def test_frame_fields_and_api_fields_report_same_status_and_line(tmp_path, field_id):
+    copy_cli_project(tmp_path)
+    cli = run_frame(tmp_path, "fields")
+    api = TestClient(create_app(report_provider=lambda: build_report(tmp_path), root=tmp_path))
+    fields = api.get("/api/fields")
+
+    assert cli.returncode == 0, cli.stderr
+    assert fields.status_code == 200
+    api_field = next(field for field in fields.json()["fields"] if field["id"] == field_id)
+    match = re.search(
+        rf"^\s*{re.escape(field_id)}\s+.*\[(?P<status>TODO guess|measured)\]\s+"
+        rf"{re.escape(api_field['file'])}:(?P<line>\d+)$",
+        cli.stdout,
+        re.MULTILINE,
+    )
+    assert match is not None
+    cli_status = "todo" if match.group("status") == "TODO guess" else "measured"
+    assert cli_status == api_field["status"]
+    assert int(match.group("line")) == api_field["line"]
+
+
+def test_cli_and_api_do_not_define_duplicate_field_helpers():
+    offenders = []
+    for relpath in ("src/fcc/api/routes.py", "src/frame_tools/cli.py"):
+        text = (ROOT / relpath).read_text(encoding="utf-8")
+        for name in ("_target_line", "_is_todo", "_is_todo_guess", "_coerce_value"):
+            if re.search(rf"^def {name}\(", text, re.MULTILINE):
+                offenders.append(f"{relpath}:{name}")
+
+    assert not offenders
+
+
+def test_only_cli_and_report_adapter_import_fcc_from_frame_tools():
+    allowed = {"cli.py", "report_api.py"}
     findings = []
     for path in (ROOT / "src" / "frame_tools").glob("*.py"):
         text = path.read_text(encoding="utf-8")
-        if path.name != "cli.py" and ("from fcc" in text or "import fcc" in text):
+        if path.name not in allowed and ("from fcc" in text or "import fcc" in text):
             findings.append(path.relative_to(ROOT).as_posix())
 
     assert not findings
     assert "from fcc" in (ROOT / "src" / "frame_tools" / "cli.py").read_text(encoding="utf-8")
+    assert "from fcc.api" in (ROOT / "src" / "frame_tools" / "report_api.py").read_text(encoding="utf-8")

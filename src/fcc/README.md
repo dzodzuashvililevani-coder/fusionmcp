@@ -14,3 +14,4 @@ geometry.
 | `errors____` | [errors.py](errors.py) | Python | Named exceptions for field specs and later writers |
 | `fields____` | [fields.py](fields.py) | Python | `fields.yaml` loader, validator, and lookup helpers |
 | `writer____` | [writer.py](writer.py) | Python | Surgical single-line writes to params, loadout, and the checklist |
+| `api____` | [api/](api/README.md) | Python | Domain-blind FastAPI contract for fields, previews, writes, and injected reports |

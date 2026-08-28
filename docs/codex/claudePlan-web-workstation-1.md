@@ -3,7 +3,7 @@
 **Plan:** claudePlan-web-workstation-1.md
 **Created:** 2026-08-27
 **Source spec:** docs/brainstorming/idea-web-workstation.md
-**Status:** ready-for-revision
+**Status:** superseded-by-claudePlan-web-workstation-2
 
 > This plan was written before the canonical commands were amended for the local
 > Windows policy state. It must be revised before implementation starts because
