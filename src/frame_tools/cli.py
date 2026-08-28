@@ -6,14 +6,13 @@ from __future__ import annotations
 
 import argparse
 import json
-import re
 import sys
 from pathlib import Path
 from typing import Any
 
 from fcc.errors import FccError
-from fcc.fields import FieldSpec, current_value, field_by_id, load_fields
-from fcc.writer import write_value
+from fcc.fields import FieldSpec, coerce_value, current_value, field_by_id, is_todo_guess, load_fields
+from fcc.writer import locate, write_value
 from . import dxf_out, fusion, geometry, mass, params, thrust, validate
 
 BAR = "-" * 62
@@ -105,8 +104,9 @@ def cmd_fields(_args) -> int:
     print(BAR)
     for field in fields:
         value = _display_value(current_value(field, root=root), field.unit)
-        status = "TODO guess" if _is_todo_guess(field, root) else "measured"
-        print(f"  {field.id:<26} {value:<14} [{status}]")
+        status = "TODO guess" if is_todo_guess(field, root) else "measured"
+        line_number, _ = locate(field, root=root)
+        print(f"  {field.id:<26} {value:<14} [{status}] {field.file}:{line_number}")
         print(f"         {field.question}")
     return 0
 
@@ -114,7 +114,7 @@ def cmd_fields(_args) -> int:
 def cmd_set(args) -> int:
     root = params.project_root()
     field = field_by_id(args.id, root=root)
-    value = _coerce_value(field, args.value)
+    value = coerce_value(field, args.value)
     range_warning = _range_warning(field, value)
     result = write_value(field, value, root=root)
 
@@ -176,17 +176,6 @@ def cmd_kerf_test(args) -> int:
     return 0
 
 
-def _coerce_value(field: FieldSpec, value: str) -> int | float:
-    try:
-        if field.type == "int":
-            return int(value)
-        if field.type == "float":
-            return float(value)
-    except ValueError as exc:
-        raise ValueError(f"{field.id}: value {value!r} cannot be converted to {field.type}") from exc
-    raise ValueError(f"{field.id}: unsupported type {field.type!r}")
-
-
 def _display_value(value: Any, unit: str) -> str:
     if isinstance(value, float):
         text = f"{value:g}"
@@ -201,45 +190,6 @@ def _range_warning(field: FieldSpec, value: int | float) -> str | None:
     low = f"{field.min:g}"
     high = f"{field.max:g}"
     return f"{field.id} is outside the expected {low}..{high} {field.unit} range."
-
-
-def _is_todo_guess(field: FieldSpec, root: Path) -> bool:
-    if field.measurement_label:
-        return not _measurement_is_ticked(field, root)
-    line = _target_line(field, root)
-    return "# TODO" in line
-
-
-def _measurement_is_ticked(field: FieldSpec, root: Path) -> bool:
-    text = (root / "docs" / "measurements.md").read_text(encoding="utf-8")
-    label = re.escape(field.measurement_label or "")
-    pattern = re.compile(rf"- \[(?P<mark>[ xX])\] {label}:")
-    for line in text.splitlines():
-        match = pattern.search(line)
-        if match:
-            return match.group("mark").lower() == "x"
-    return False
-
-
-def _target_line(field: FieldSpec, root: Path) -> str:
-    text = (root / field.file).read_text(encoding="utf-8")
-    if field.file == "params.yaml":
-        section, key = field.key_path.split(".", 1)
-        current_section = ""
-        for line in text.splitlines():
-            stripped = line.strip()
-            if line and not line.startswith(" ") and stripped.endswith(":"):
-                current_section = stripped.removesuffix(":")
-                continue
-            if current_section == section and re.match(rf"\s+{re.escape(key)}:", line):
-                return line
-    if field.file == "components/loadout.yaml" and field.item and field.field:
-        name_pattern = re.compile(rf"\bname:\s*{re.escape(field.item)}(?=[,\s}}])")
-        field_pattern = re.compile(rf"\b{re.escape(field.field)}:")
-        for line in text.splitlines():
-            if name_pattern.search(line) and field_pattern.search(line):
-                return line
-    return ""
 
 
 def main(argv: list[str] | None = None) -> int:

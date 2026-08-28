@@ -70,6 +70,27 @@ def current_value(field: FieldSpec, root: Path | None = None) -> Any:
     raise SpecError(f"{field.id}: unsupported file {field.file!r}")
 
 
+def coerce_value(field: FieldSpec, value: str | int | float) -> int | float:
+    """Parse user input for a field without applying range policy."""
+    try:
+        if field.type == "int":
+            return int(value)
+        if field.type == "float":
+            return float(value)
+    except (TypeError, ValueError) as exc:
+        raise ValueError(f"{field.id}: value {value!r} cannot be converted to {field.type}") from exc
+    raise ValueError(f"{field.id}: unsupported type {field.type!r}")
+
+
+def is_todo_guess(field: FieldSpec, root: Path | None = None) -> bool:
+    """Return whether a field still appears to hold an unmeasured TODO value."""
+    root = root or project_root()
+    if field.measurement_label:
+        return not _measurement_is_ticked(field, root)
+    line = _target_line(field, root)
+    return "# TODO" in line
+
+
 def _load_spec(path: Path) -> dict[str, Any]:
     if not path.exists():
         raise SpecError(f"missing field spec: {path}")
@@ -194,6 +215,38 @@ def _validate_measurement_label(field: FieldSpec, root: Path) -> None:
             f"{field.id}: measurement label {field.measurement_label!r} "
             f"matches multiple checklist lines: {joined}"
         )
+
+
+def _measurement_is_ticked(field: FieldSpec, root: Path) -> bool:
+    text = (root / "docs" / "measurements.md").read_text(encoding="utf-8")
+    label = re.escape(field.measurement_label or "")
+    pattern = re.compile(rf"- \[(?P<mark>[ xX])\] {label}:")
+    for line in text.splitlines():
+        match = pattern.search(line)
+        if match:
+            return match.group("mark").lower() == "x"
+    return False
+
+
+def _target_line(field: FieldSpec, root: Path) -> str:
+    text = (root / field.file).read_text(encoding="utf-8")
+    if field.file == "params.yaml":
+        section, key = field.key_path.split(".", 1)
+        current_section = ""
+        for line in text.splitlines():
+            stripped = line.strip()
+            if line and not line.startswith(" ") and stripped.endswith(":"):
+                current_section = stripped.removesuffix(":")
+                continue
+            if current_section == section and re.match(rf"\s+{re.escape(key)}:", line):
+                return line
+    if field.file == "components/loadout.yaml" and field.item and field.field:
+        name_pattern = re.compile(rf"\bname:\s*{re.escape(field.item)}(?=[,\s}}])")
+        field_pattern = re.compile(rf"\b{re.escape(field.field)}:")
+        for line in text.splitlines():
+            if name_pattern.search(line) and field_pattern.search(line):
+                return line
+    return ""
 
 
 def _resolve_key_path(data: dict[str, Any], key_path: str, field_id: str) -> Any:

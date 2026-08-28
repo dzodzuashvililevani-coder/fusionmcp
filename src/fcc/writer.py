@@ -12,7 +12,7 @@ from typing import Any
 import yaml
 
 from fcc.errors import AmbiguousLabel, LabelNotFound, PathRefused, SpecError, UnsurgicalEdit
-from fcc.fields import FieldSpec
+from fcc.fields import FieldSpec, current_value
 from frame_tools.params import project_root
 
 FORBIDDEN_PARTS = {".git", ".venv", "__pycache__", ".pytest_cache"}
@@ -116,6 +116,20 @@ def preview(field: FieldSpec, value: Any, root: Path | None = None) -> str:
         diffs.extend(_diff(relpath, measurement, new_measurement))
 
     return "".join(diffs)
+
+
+def locate(field: FieldSpec, root: Path | None = None) -> tuple[int, str]:
+    """Return the 1-based line number and full text of the line this field addresses."""
+    root = root or project_root()
+    text = _read_target(root, field.file)
+    formatted = _format_value(field, current_value(field, root=root))
+    if field.file == "params.yaml":
+        _, line_number, old_line, _ = _replace_params_value(text, field, formatted)
+        return line_number, old_line
+    if field.file == "components/loadout.yaml":
+        _, line_number, old_line, _ = _replace_loadout_value(text, field, formatted)
+        return line_number, old_line
+    raise UnsurgicalEdit(f"{field.id}: cannot locate values in {field.file!r}")
 
 
 def _read_target(root: Path, relpath: str) -> str:
