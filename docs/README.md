@@ -11,6 +11,7 @@
 |---|---|---|---|---|
 | `measure____` | [measurements.md](measurements.md) | Markdown | Caliper checklist for every salvaged part | **Fill this in first** |
 | `project____` | [project/](project/README.md) | Markdown | Project identity, mission, scope, source-of-truth hierarchy | Read before major changes |
+| `reports____` | [reports/](reports/README.md) | Markdown | Plain-language report per finished roadmap phase | Read to understand the project |
 | `buildlog____` | [build-log.md](build-log.md) | Markdown | Dated log of what changed and what happened | Append as you go |
 | `knowledge____` | [knowledge/](knowledge/README.md) | Markdown | Export contract for a separate knowledge project | Read before exporting |
 | `brainstorm____` | [brainstorming/](brainstorming/README.md) | Markdown | Rough feature ideas before a plan exists | Start feature thinking here |
