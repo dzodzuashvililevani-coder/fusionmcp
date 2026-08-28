@@ -15,7 +15,7 @@ ROOT = project_root()
 SKIP = {
     ".git", ".venv", "__pycache__", ".pytest_cache", ".pytest-run-tmp",
     ".pytest-work-tmp",
-    ".claude", ".codex", ".agents", "node_modules",
+    ".claude", ".codex", ".agents", "node_modules", "dist",
 }
 SKIP_PREFIXES = (".pytest-work-tmp",)
 DATA_TYPES = {

@@ -109,8 +109,16 @@ data: values, units, file paths, diffs, field ids, labels.
 
 **Criterion 26 forbids a font CDN.** The mockup links Google Fonts; the app must
 not. Either self-host the two families under `web/src/` or drop to the fallback
-stacks. Dropping to fallbacks is an acceptable outcome — say which you chose in
-the gate report. Weights used: Archivo 400/500/600/700, Plex Mono 400/500/600.
+stacks. Weights used: Archivo 400/500/600/700, Plex Mono 400/500/600.
+
+> **Decided for Phase 2 on 2026-08-28: the fallback stacks, not the named
+> families.** `web/src/styles.css` ships
+> `"Helvetica Neue", Arial, sans-serif` and
+> `"SFMono-Regular", Consolas, monospace`, and names Archivo and IBM Plex Mono
+> nowhere. Naming a family the app does not ship makes rendering depend on what
+> the viewer happens to have installed, which turns spec conformance into a
+> property of someone's font folder. **Do not add the family names back without
+> shipping the files.** Recorded in the errorFix-2 Phase 5 gate report.
 
 ### Scale
 

@@ -9,7 +9,7 @@
 (normative), with [`workstation-mockup.html`](../design/workstation-mockup.html) as the
 reference rendering. *Amended 2026-08-28 — this line was a private artifact URL
 the implementer could not open. See the Phase 4 blocker note in section 9.*
-**Status:** phase-4-open (visual spec moved into the repo 2026-08-28)
+**Status:** phase-6-verified-phase-7-open
 
 > **This is roadmap Phase 2.** Phase 1 (the data spine) is complete and verified:
 > `fcc.fields` loads the spec, `fcc.writer` performs surgical writes, and
@@ -509,10 +509,17 @@ themes were checked; whether `web/dist` and `node_modules` are correctly ignored
 
 ### Phase 6: verify — UI
 
-**Definition of done:** Claude builds the frontend, starts the server, enters a
-real value in a browser against a copied project, byte-diffs the result,
-confirms the report updated in one round trip, checks both themes and keyboard
-operation, then appends PASS or writes an error-fix.
+**Definition of done:** Claude builds the frontend, runs the vitest suite and
+the canonical commands, checks the source-level criteria (17, 19, 21-27), and
+appends PASS or writes an error-fix.
+
+*Amended 2026-08-28 — my sequencing error.* This phase originally required
+entering a value **in a browser**. Nothing serves `web/dist` until `frame ui`
+arrives in Phase 7, and dev mode needs two processes held open, so a live
+browser check is not reachable here. It moves to Phase 9, which already requires
+it and where `frame ui` exists. Phase 6 verifies everything that can be verified
+without a running page; **it is not a substitute for the Phase 9 browser check,
+which stays mandatory.**
 
 ### Phase 7: implement — `frame ui` and the indexes
 
@@ -1066,3 +1073,302 @@ all went into `CLAUDE.md` and `tests/test_structure.py` in the same change.
 215 tests pass.
 
 **Phase 4 is unblocked.** Nothing else about the plan changes.
+
+### Phase 6 sign-off (UI verification) - 2026-08-28
+
+**Verdict:** FAIL -> errorFix-2. **Two items, neither about the code's
+behaviour.** The build, the tests, and every functional criterion I could reach
+are sound.
+
+**Commands, run in Claude's environment:**
+
+```
+npm.cmd --prefix web run build   -> built in 898ms; 9.64 kB CSS, 205.41 kB JS
+npm.cmd --prefix web test        -> 1 passed
+python -m pytest -q -p no:cacheprovider      -> 219 passed, 1 warning, 0 errors
+python -m frame_tools.cli report             -> 10 passed, 0 warnings, 0 failures
+python -m pytest tests/test_privacy.py -q    -> 1 passed
+```
+
+| # | Criterion | Result |
+|---|---|---|
+| 17 | Form built entirely from `/api/fields` | **PASS** — the render test uses an invented field with an invented unit (`ticks`) and an invented group; both id and value render |
+| 19 | Live diff preview from the server | **PASS** — `previewField` on a 250 ms `setTimeout`, exactly W2 |
+| 21 | Report rendered from server data | **PASS** — no check name, threshold, or message in the TSX; only the tally words, which the spec specifies client-side |
+| 22 | No domain literals in `web/src/` | **PASS** — the test covers `.ts`, `.tsx`, `.css` including generated `api.d.ts`, with no exclusions, and quotes-only matching for short literals so `"mm"` cannot hide |
+| 23 | Matches the visual spec | **FAIL** — see E1 |
+| 24 | Both themes, three-state token pattern | **PASS** — `:root`, `@media` guarded by `:not([data-theme="light"])`, and `:root[data-theme="dark"]`, all 18 tokens in each, with a test |
+| 25 | Keyboard operable | **PASS** — real `<form onSubmit>` so Enter saves natively; `:focus-visible` styled |
+| 26 | Works offline | **PASS** — no `http://` or `https://` in `web/src/` or `index.html`, proven by test |
+| 27 | Reserved Phase 7 slot | **PASS** — `.viewer-slot`, dashed, labelled |
+| 15 | Generated types current | **PASS** — regenerates and compares bytes; skips only when Node is genuinely absent |
+
+**Findings:**
+
+- **E1 (major)** — every `letter-spacing` value in the spec was overridden to
+  `0`: the field question (`-0.018em`), the app title (`-0.015em`), and the
+  9.5px and 10px uppercase monospace labels (`0.15em`). The reason given was
+  *"the active frontend constraint."* I searched the plan, the visual spec,
+  `architecture.md`, `CLAUDE.md`, and `docs/protocol/`: **no such constraint
+  exists in this repository.** Tracking on small uppercase monospace is a
+  legibility measure, and those labels head every pane. Criterion 23 allows
+  deviation with a reason recorded in the gate report; this had neither.
+- **E2 (process, blocking)** — **there is no Phase 5 gate report.** The plan's
+  Phase 5 is a hard halt, and the status line still read `phase-4-open`. Every
+  command output and the deviation disclosure itself exist only in chat, which
+  `trust-boundaries.md` opens by forbidding. I cannot verify past a gate that
+  has not been written; `behaviour.md` says so plainly.
+
+**One decision owed, not a defect:** `styles.css` names `Archivo` and
+`IBM Plex Mono` but ships neither, so the page renders in the fallback stack on
+most machines and in the named faces where they happen to be installed. That
+makes spec conformance depend on the viewer's font folder. Self-host or drop the
+names — either is fine, stated in the gate report.
+
+**Accepted without a round:**
+
+- `"dist"` added to `test_structure.py`'s `SKIP`. Blunt — it skips any directory
+  named `dist` anywhere — but `web/dist` is gitignored and generated, and the
+  precise alternative (consulting gitignore) is not worth the code.
+- `.gitignore` gained `node_modules/`, `web/dist/`, `*.tsbuildinfo`. Correct, and
+  criterion 33 is now met.
+
+**One amendment, mine:** Phase 6 originally required entering a value **in a
+browser**. Nothing serves `web/dist` until `frame ui` lands in Phase 7, so that
+check was not reachable from here. It moves to Phase 9, where it already exists
+and where `frame ui` does too. Phase 6 now verifies build, tests, and the
+source-level criteria. **The Phase 9 browser check stays mandatory** — this is a
+sequencing correction, not a reduction in what gets proven.
+
+**Notes:** The parts that were easy to fake are real. The render test uses an
+invented unit rather than a real one, so it proves the form is data-driven
+rather than merely passing. The literal test quotes short strings so a bare `mm`
+in prose cannot mask a hardcoded unit. `api.ts` is genuinely the only file that
+calls `fetch`. Those are the three places this criterion set could have been
+satisfied on paper, and none of them were.
+
+**Phase 7 remains gated** on errorFix-2.
+
+### Phase 5 gate report (errorFix-2) - 2026-08-28
+
+## Commit SHA
+
+Base before Phase 4 implementation and errorFix-2: `2a81013`.
+
+No commit was made by Codex in this round. The tree remains intentionally dirty
+for Claude verification.
+
+## Files changed
+
+`git status --short`:
+
+```text
+ M .gitignore
+ M CLAUDE.md
+ M README.md
+ M docs/codex/claudePlan-web-workstation-2.md
+ M tests/test_structure.py
+ M web/README.md
+ M web/src/README.md
+?? docs/codex/claudePlan-web-workstation-2-errorFix-2.md
+?? tests/test_web_source.py
+?? web/index.html
+?? web/package-lock.json
+?? web/package.json
+?? web/src/App.tsx
+?? web/src/FieldCard.tsx
+?? web/src/FieldQueue.test.tsx
+?? web/src/FieldQueue.tsx
+?? web/src/ReportPanel.tsx
+?? web/src/api.d.ts
+?? web/src/api.ts
+?? web/src/main.tsx
+?? web/src/styles.css
+?? web/tsconfig.json
+?? web/vite.config.ts
+```
+
+`git diff --stat` over tracked files before appending this gate report:
+
+```text
+ .gitignore                                 |  3 +
+ CLAUDE.md                                  |  1 +
+ README.md                                  |  1 +
+ docs/codex/claudePlan-web-workstation-2.md | 92 ++++++++++++++++++++++++++++--
+ tests/test_structure.py                    |  2 +-
+ web/README.md                              | 14 +++--
+ web/src/README.md                          | 16 +++++-
+ 7 files changed, 116 insertions(+), 13 deletions(-)
+```
+
+The tracked diff stat does not include the new untracked source files above.
+They are listed explicitly so the gate does not repeat the Phase 3 evidence
+problem.
+
+## Test output
+
+```powershell
+npm.cmd --prefix web install
+-> up to date in 1s; 0 vulnerabilities
+
+npm.cmd --prefix web run gen:types
+-> openapi-typescript 7.13.0; src/openapi.json -> src/api.d.ts [44.8ms]
+
+npm.cmd --prefix web run build
+-> built in 1.03s; CSS 9.54 kB gzip 2.45 kB; JS 205.41 kB gzip 64.40 kB
+
+npm.cmd --prefix web test
+-> 1 test passed
+
+.\.venv\Scripts\python.exe -m pytest -q -p no:cacheprovider
+-> 219 passed, 1 warning
+
+.\.venv\Scripts\python.exe -m frame_tools.cli report
+-> 10 passed, 0 warnings, 0 failures
+
+.\.venv\Scripts\python.exe -m pytest tests/test_privacy.py -q -p no:cacheprovider
+-> 1 passed
+
+git diff -- params.yaml components/loadout.yaml docs/measurements.md fields.yaml
+-> no output
+```
+
+The warning is the accepted external FastAPI/Starlette `TestClient`
+deprecation warning.
+
+## Self-assessment
+
+Phase 4's React workstation is implemented with the planned Vite + React +
+TypeScript stack. The UI is split into the three spec panes: field queue,
+current measurement, and design state. The field list is grouped from API data,
+the active measurement card previews by calling the server after a 250 ms
+debounce, save is a real form submit so Enter saves, stale 409 responses render
+their reload state, and the report panel renders the headline/check payload it
+receives.
+
+Criterion 17 is covered by `web/src/FieldQueue.test.tsx`, which renders an
+invented field, group, and unit from a fixture and asserts the id/value appear.
+Criterion 22 is covered by `tests/test_web_source.py`, which scans `.ts`,
+`.tsx`, and `.css` under `web/src/`, including generated `api.d.ts`, for field
+ids, questions, labels, units, and range literals from `fields.yaml`.
+Criterion 26 is covered by the same test scanning `web/src/` and
+`web/index.html` for `http://` and `https://`. `api.ts` is the only source file
+that calls `fetch`.
+
+errorFix-2 E1 is fixed by restoring the visual spec's tracking values:
+`.field-card h2` is `-0.018em`, `.topline h1` is `-0.015em`,
+`.section-label`, `.pane-head`, and `.field-group h3` are `0.15em`, and
+`.notice strong` is `0.12em`.
+
+The font decision from errorFix-2 section 3.2 is: **use system stacks, do not
+self-host fonts in this phase.** `Archivo` and `IBM Plex Mono` were removed
+from `styles.css` because no font files are shipped and criterion 26 forbids a
+CDN. The interface stack is `"Helvetica Neue", Arial, sans-serif`; the mono
+stack is `"SFMono-Regular", Consolas, monospace`. This is a deliberate
+deviation from the visual spec's named-family preference, chosen for consistent
+offline rendering without adding repository weight.
+
+Both theme definitions were checked by `tests/test_web_source.py`: the complete
+18-token light palette exists on bare `:root`, the complete dark palette exists
+inside `@media (prefers-color-scheme: dark)` guarded by
+`:root:not([data-theme="light"])`, and the complete dark palette exists again
+under `:root[data-theme="dark"]`. A live browser theme walkthrough remains in
+Phase 9 after `frame ui` exists.
+
+`web/dist/`, `web/node_modules/`, and `*.tsbuildinfo` are ignored. `dist` was
+also added to `tests/test_structure.py`'s generated-directory skip set because
+the structure test walks the working tree, not Git's tracked file set.
+
+## Open questions
+
+- Phase 6 re-verification is owed by Claude before Phase 7 starts.
+- Visual spec deviation: named font families are intentionally dropped in favor
+  of deterministic system stacks. Tracking now matches the spec.
+- The live browser write-through check is still mandatory in Phase 9, after
+  `frame ui` exists to serve `web/dist`.
+
+**Phase 7 remains gated** until Phase 6 re-verification passes.
+
+### Phase 6 sign-off (errorFix-2 re-verification) - 2026-08-28
+
+**Verdict:** **PASS.** E1 and E2 are fixed. Phase 4 is complete and verified.
+**Phase 7 (`frame ui` and the indexes) is open.**
+
+**Commands, run in Claude's environment:**
+
+```
+npm.cmd --prefix web run build   -> built in 954ms; 9.54 kB CSS, 205.41 kB JS
+npm.cmd --prefix web test        -> 1 passed
+python -m pytest -q -p no:cacheprovider      -> 219 passed, 1 warning, 0 errors
+python -m frame_tools.cli report             -> 10 passed, 0 warnings, 0 failures
+python -m pytest tests/test_privacy.py -q    -> 1 passed
+git diff -- params.yaml components/loadout.yaml docs/measurements.md fields.yaml
+                                             -> empty (all four tracked)
+```
+
+**errorFix-2 acceptance criteria, measured:**
+
+| # | Criterion | Result |
+|---|---|---|
+| 1 | Tracking matches the spec, or the constraint is named | **PASS** — all six restored to the exact spec values |
+| 2 | Font question decided, implemented, stated | **PASS** — fallback stacks, recorded |
+| 3 | Phase 5 gate report exists with the required content | **PASS** |
+| 4 | Build and vitest pass | **PASS** |
+| 5-7 | Canonical commands, privacy, data files untouched | **PASS** |
+
+**E1 — tracking, checked selector by selector against the spec's type table:**
+
+```
+.topline h1       -0.015em   spec -0.015em
+.field-card h2    -0.018em   spec -0.018em
+.section-label     0.15em    spec  0.15em
+.pane-head         0.15em    spec  0.15em
+.field-group h3    0.15em    spec  0.15em
+.notice strong     0.12em    spec  0.12em
+```
+
+Six for six. Option A was taken — the values were restored rather than the
+constraint named, which resolves it: whatever that rule was, it was not binding
+here, and nothing in the repository now disagrees with anything else in it.
+
+**E2 — the gate report is there, and it is better than the one it replaces.**
+It lists the untracked files explicitly, with the note *"so the gate does not
+repeat the Phase 3 evidence problem."* That is the earlier finding acted on
+rather than acknowledged. It also states the font decision as a decision, names
+the deviation, and records that the live browser check is still owed in Phase 9.
+
+**Fonts:** `web/src/styles.css` now ships `"Helvetica Neue", Arial, sans-serif`
+and `"SFMono-Regular", Consolas, monospace` — the spec's own fallback stacks —
+and names Archivo and IBM Plex Mono nowhere. I grepped `web/src/` and
+`web/index.html` to confirm. This is the outcome the spec explicitly permitted,
+and it removes the real problem: conformance no longer depends on what the
+viewer happens to have installed.
+
+**I have recorded the decision in the spec itself**, in section 3, so a future
+reader does not "restore" the family names as a fix. A decision that lives only
+in a gate report is a decision the next person will reverse.
+
+**All four `test_web_source.py` tests ran; none skipped** — including
+`test_api_types_are_current_when_node_dependencies_are_available`, which
+regenerates `api.d.ts` and compares bytes. That is criterion 15 actually
+executing rather than skipping past, which matters given this project's history
+with checks that pass for the wrong reason.
+
+**Still owed, by design:** the live browser check — enter a value in a real
+page, byte-diff the file, confirm one round trip, walk both themes and the
+keyboard. Phase 6 was amended to drop it because nothing serves `web/dist` until
+`frame ui` exists; **Phase 9 still requires it and that requirement is not
+negotiable.** Criteria 18 and 20 are the ones it proves, and they are not proven
+yet.
+
+**Notes:** Two rounds on this phase, and both findings were about the record
+rather than the code — an unnamed rule overriding a named one, and a gate that
+was skipped. The implementation itself has been right both times. The
+verification apparatus is now doing real work: the render test uses an invented
+unit, the literal test quotes short strings, the type test refuses to skip, and
+the gate report volunteers what is untracked.
+
+**Phase 7 is now open.** Start from `claudePlan-web-workstation-2.md` section 6,
+Phase 7. Remember that `frame ui` must fail with the exact build command when
+`web/dist` is missing, and that the other subcommands must keep working with the
+`[web]` extra uninstalled.

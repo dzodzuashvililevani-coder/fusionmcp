@@ -43,6 +43,7 @@ with a finer-grained table.
 | `fusion____` | [fusion_scripts/](fusion_scripts/README.md) | Python (in Fusion) | Scripts that run inside Fusion |
 | `handoff____` | [fusion_scripts/frame_params.json](fusion_scripts/frame_params.json) | JSON | The generated handoff. `frame fusion -o` writes it |
 | `mcp____` | [.mcp.json](.mcp.json) | JSON | Fusion MCP endpoint, picked up by Claude Code |
+| `web____` | [web/](web/README.md) | TypeScript | Local browser measurement workstation |
 | `editor____` | [.vscode/](.vscode/README.md) | JSON | Interpreter path, pytest, debug config |
 | `cad____` | [cad/](cad/README.md) | Binary CAD | `.f3d` / `.step` exports |
 | `cut____` | [dxf/](dxf/README.md) | Vector | `.dxf` files for the cutter |

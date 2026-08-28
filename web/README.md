@@ -1,12 +1,18 @@
 # web/
 
-**Purpose:** Browser workstation assets and generated API contract snapshots.
+**Purpose:** Browser workstation package, build configuration, and generated
+API contract snapshots.
 
-**Data stored here:** JSON during the API phase. Later phases add the
-TypeScript workstation and built frontend assets.
+**Data stored here:** TypeScript, CSS, HTML, JSON package metadata, and
+generated API contract files. Built assets are written to `dist/` and ignored.
 
 ## Portals
 
 | Portal | Path | Type | Holds |
 |---|---|---|---|
-| `src____` | [src/](src/README.md) | JSON | Generated API contract snapshot |
+| `package____` | [package.json](package.json) | JSON | npm scripts and frontend dependencies |
+| `lock____` | [package-lock.json](package-lock.json) | JSON | npm dependency lockfile |
+| `tsconfig____` | [tsconfig.json](tsconfig.json) | JSON | TypeScript compiler settings |
+| `vite____` | [vite.config.ts](vite.config.ts) | TypeScript | Vite build and dev proxy configuration |
+| `index____` | [index.html](index.html) | HTML | Browser entry shell |
+| `src____` | [src/](src/README.md) | TypeScript | React workstation source and generated API types |

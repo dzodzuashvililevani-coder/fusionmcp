@@ -111,6 +111,7 @@ saying what it holds and in what format:
 | [conftest.py](conftest.py) | Pytest temp-root selection for agent environments | Python |
 | [src/frame_tools/](src/frame_tools/README.md) | The calculation engine | Python |
 | [src/fcc/](src/fcc/README.md) | Domain-blind field spec and writer support | Python |
+| [web/](web/README.md) | Local browser measurement workstation | TypeScript |
 | [tests/](tests/README.md) | Design invariants | Python |
 | [fusion_scripts/](fusion_scripts/README.md) | Scripts that run *inside* Fusion | Python (in Fusion) |
 | [docs/](docs/README.md) | Measurements in, lessons out | Markdown |
