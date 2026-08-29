@@ -13,7 +13,10 @@ for Codex implementation yet.
 | `ideatemplate____` | [idea-template.md](idea-template.md) | Markdown | Structured prompt for a rough feature idea |
 | `ideas____` | `idea-<slug>.md` | Markdown | Brainstorming notes before Claude turns them into a plan |
 | `reviews____` | `review-<slug>.md` | Markdown | Claude's analysis of an idea: rating, gaps, open questions |
+| `uimanifestoreview____` | [review-user-UI-manifesto.md](review-user-UI-manifesto.md) | Markdown | Review and brainstorming analysis of the user UI manifesto |
+| `uimanifestoalign____` | [review-user-UI-manifesto-alignment.md](review-user-UI-manifesto-alignment.md) | Markdown | Claude alignment review of the UI manifesto against current project decisions |
 | `decisions____` | `decision-<slug>.md` | Markdown | Short decision records when an idea changes direction |
+| `uimanifesto____` | [user-UI-manifesto.md](user-UI-manifesto.md) | Markdown | User-written UI/workspace philosophy for future brainstorming |
 
 ## Flow
 
